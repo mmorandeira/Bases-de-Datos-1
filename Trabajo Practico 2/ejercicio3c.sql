@@ -1,0 +1,3 @@
+SELECT id_departamento, nombre_departamento
+FROM departamento
+WHERE jefe_departamento IS NULL
