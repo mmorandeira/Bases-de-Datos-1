@@ -1,2 +1,2 @@
 SELECT SUM(sueldo)
-FROM empleado
+FROM unc_esq_peliculas.empleado

@@ -1,3 +1,3 @@
 SELECT idioma, COUNT(idioma)
-FROM pelicula
+FROM unc_esq_peliculas.pelicula
 GROUP BY idioma
