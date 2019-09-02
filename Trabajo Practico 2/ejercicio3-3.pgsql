@@ -1,3 +1,0 @@
-SELECT id_departamento, nombre_departamento
-FROM unc_esq_peliculas.departamento
-WHERE jefe_departamento IS NULL
