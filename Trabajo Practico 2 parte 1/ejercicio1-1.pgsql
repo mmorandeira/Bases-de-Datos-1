@@ -1,0 +1,2 @@
+SELECT DISTINCT id_tarea
+FROM unc_esq_voluntario.voluntario
