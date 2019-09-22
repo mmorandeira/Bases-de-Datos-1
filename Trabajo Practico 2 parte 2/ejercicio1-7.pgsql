@@ -9,3 +9,11 @@ WHERE v.id_institucion IN ( SELECT i.id_institucion
 AND (v.nro_voluntario IN (  SELECT id_director
                             FROM unc_esq_voluntario.institucion))
 ORDER BY v.nombre, v.apellido
+
+--select nro_voluntario,nombre,apellido
+--from voluntario
+--where nro_voluntario in (	select i.id_director
+--							from institucion i
+--							join direccion d on (i.id_direccion = --d.id_direccion)
+--							join pais p on (d.id_pais = p.id_pais)
+--							where p.id_continente = 1)
