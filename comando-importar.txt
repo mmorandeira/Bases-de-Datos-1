@@ -1,0 +1,8 @@
+# para importar la base de datos tenes que tener instalado psql
+# comandos
+# -h el nombre del host (en el ejemplo es la ip interna de la base de datos)
+# -d nombre de la base de datos
+# -U nombre de usuario, iria el de ustedes
+# -f el nombre del archivo que se va a importar
+psql -h 10.1.6.30 -d cursada -U unc_248557 -f 'dump_voluntario.sql'
+
