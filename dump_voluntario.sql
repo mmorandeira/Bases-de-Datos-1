@@ -24,7 +24,7 @@ SET row_security = off;
 -- Name: SCHEMA unc_248557; Type: COMMENT; Schema: -; Owner: unc_248557
 --
 
-COMMENT ON SCHEMA unc_248557 IS 'Esquema de Voluntarios de la Cátedra';
+--COMMENT ON SCHEMA unc_248557 IS 'Esquema de Voluntarios de la Cátedra';
 
 
 SET default_tablespace = '';

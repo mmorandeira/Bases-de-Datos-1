@@ -152,3 +152,94 @@ update tp5_ej1_envio set cantidad=820 where id_proveedor='P1' and id_articulo='A
 --EJERCICIO 2
 --########################################################################
 
+--esta vista es actualizable, ya que se muestra solo atributos de la tablas
+--mas su primary key completa
+create view tp5_ej2_distribuidor_200 as
+	select id_distribuidor,nombre,tipo
+	from pelicula_distribuidor
+	where id_distribuidor > 200
+;
+
+--esta vista no es actualizable, ya que la entidad departamento
+--es debil de distribuidor por lo tanto la clave es tanto id_departamento
+--como id_distrobuidor y dado que no se seleciona la clave esto imposibilita
+--la actualizacion de la misma
+create view tp5_ej2_departamento_dist_200 as
+	select id_departamento, nombre, id_ciudad, jefe_departamento
+	from pelicula_departamento
+	where id_distribuidor > 200
+;
+
+--
+create view tp5_ej2_distribuidor_1000 as
+	select *
+	from pelicula_distribuidor
+	where id_distribuidor > 1000
+;
+
+
+insert into tp5_ej2_distribuidor_1000 values (1050,'NuevoDistribuidor 1050','Montiel 340','569842-2643','N');
+
+
+--EJERCICIO 3
+--########################################################################
+
+--1)
+--Es actualizable (en SQL standard)
+create view tp5_ej3_empleado_dist_20 as
+	select id_empleado,nombre,apellido,sueldo,fecha_nacimiento
+	from pelicula_empleado
+	where id_distribuidor=20
+;
+
+--2)
+--Es actualizable (en SQL standard)
+create view tp5_ej3_empleado_dist_2000 as
+	select nombre,apellido,sueldo
+	from tp5_ej3_empleado_dist_20
+	where sueldo > 2000
+;
+
+--3)
+--Es actualizable (en SQL standard)
+create view tp5_ej3_empleado_dist_20_70 as
+	select *
+	from tp5_ej3_empleado_dist_20
+	where extract(year from fecha_nacimiento) between 1970 and 1979
+;
+
+--4)
+--No es actualizable (en SQL standard), porque se usa funcion de agregacion "sum"
+create view tp5_ej3_peliculas_entregadas as
+	select codigo_pelicula,sum(cantidad)
+	from pelicula_renglon_entrega
+	group by codigo_pelicula
+;
+
+--5)
+--Es actualizable (en SQL standard)
+create view tp5_ej3_distribuidoras_argentina as
+	select d.id_distribuidor,d.nombre,d.direccion,d.telefono,n.nro_inscripcion,n.encargado
+	from pelicula_distribuidor d
+	join pelicula_nacional n on (d.id_distribuidor=n.id_distribuidor)
+;
+
+--6)
+create view tp5_ej3_distribuidoras_mas_2_emp as
+	select *
+	from tp5_ej3_distribuidoras_argentina d
+	where not exists (	select 1
+						from pelicula_empleado e
+						where e.id_distribuidor=d.id_distribuidor
+						group by e.id_departamento
+						having count(id_empleado)<=2)
+		  and exists (	select 1
+		  				from pelicula_empleado e
+		  				where e.id_distribuidor=d.id_distribuidor)
+;
+
+
+--EJERCICIO 2
+--########################################################################
+
+
