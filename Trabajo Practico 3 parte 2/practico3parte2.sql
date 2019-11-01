@@ -9,7 +9,7 @@
 --########################################################################
 
 --CREACION DE LA TABLA HIS_ENTREGA
-CREATE table pelicula_his_entrega (
+CREATE TABLE pelicula_his_entrega (
 	nro_registro serial NOT NULL,
 	fecha date NOT NULL,
 	operacion varchar(10) NOT NULL,
@@ -18,53 +18,47 @@ CREATE table pelicula_his_entrega (
 );
 
 CREATE OR REPLACE FUNCTION updateLog() RETURNS TRIGGER AS
-$$
+$body$
 DECLARE
-	cant integer;
+	_cant integer;
 BEGIN
 	SELECT count(*) INTO cant
 	FROM new_table;
-	INSERT INTO pelicula_his_entrega(fecha,operacion,cant_reg_afectados,usuario) VALUES (CURRENT_DATE,TG_OP,cant,CURRENT_USER);
+	INSERT INTO pelicula_his_entrega(fecha,operacion,cant_reg_afectados,usuario) VALUES (CURRENT_DATE,TG_OP,_cant,CURRENT_USER);
 	RETURN NULL;
 END
-$$
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER tr_updateLog1
-AFTER INSERT
-ON pelicula_entrega
+AFTER INSERT ON pelicula_entrega
 REFERENCING NEW TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 CREATE TRIGGER tr_updateLog2
-AFTER update
-ON pelicula_entrega
+AFTER UPDATE ON pelicula_entrega
 REFERENCING NEW TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 CREATE TRIGGER tr_updateLog3
-AFTER delete
-ON pelicula_entrega
+AFTER DELETE ON pelicula_entrega
 REFERENCING OLD TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 CREATE TRIGGER tr_updateLog4
-AFTER INSERT
-ON pelicula_renglon_entrega
+AFTER INSERT ON pelicula_renglon_entrega
 REFERENCING NEW TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 CREATE TRIGGER tr_updateLog5
-AFTER update
-ON pelicula_renglon_entrega
+AFTER UPDATE ON pelicula_renglon_entrega
 REFERENCING NEW TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 CREATE TRIGGER tr_updateLog6
-AFTER delete
-ON pelicula_renglon_entrega
+AFTER DELETE ON pelicula_renglon_entrega
 REFERENCING OLD TABLE AS new_table
-	FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
+FOR EACH STATEMENT EXECUTE PROCEDURE updateLog();
 	
 SELECT *
 FROM pelicula_entrega
@@ -97,7 +91,7 @@ CREATE TABLE tp3p2_ej3_empleado_2 (
 	CONSTRAINT pk_tp3p2_ej3_empleado_2 PRIMARY KEY(id_empleado)
 );
 
-INSERT into tp3p2_ej3_empleado_2(id_empleado,sueldo) VALUES (2,700),(3,300),(4,700);
+INSERT INTO tp3p2_ej3_empleado_2(id_empleado,sueldo) VALUES (2,700),(3,300),(4,700);
 
 SELECT *
 FROM tp3p2_ej3_empleado_1
@@ -107,14 +101,14 @@ FROM tp3p2_ej3_empleado_2
 
 CREATE OR REPLACE FUNCTION autoIncremento()
 RETURNS TRIGGER AS 
-$$
+$body$
 BEGIN
 	UPDATE tp3p2_ej3_empleado_1 SET
-		sueldo=sueldo-(SELECT MIN(sueldo)*0.05 FROM tp3p2_ej3_empleado_1)
+		sueldo=sueldo-(SELECT min(sueldo)*0.05 FROM tp3p2_ej3_empleado_1)
 	;
 	RETURN NEW;
 END
-$$
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER trigger_autoincremento
@@ -139,7 +133,6 @@ CREATE TABLE pelicula_historico (
 	id_departamento numeric(4,0) NOT NULL,
 	fecha_inicio timestamp NOT NULL,
 	fecha_fin timestamp NULL,
-	
 	CONSTRAINT pk_pelicula_historico PRIMARY KEY(id_empleado,id_departamento,id_distribuidor,fecha_inicio)
 );
 
@@ -203,10 +196,10 @@ ALTER COLUMN fecha_inicio SET DEFAULT current_timestamp;
 
 --seteo todos los valores de fecha_incio a "ahora"
 UPDATE pelicula_empleado 
-set fecha_inicio=default;
+SET fecha_inicio=DEFAULT;
 
 SELECT *
-FROM pelicula_empleado AS pe;
+FROM pelicula_empleado;
 
 --agrego la restriccion que no puede ser NULL
 ALTER TABLE pelicula_empleado
@@ -214,36 +207,36 @@ ALTER COLUMN fecha_inicio SET NOT NULL;
 
 CREATE OR REPLACE FUNCTION pelicula_logger()
 RETURNS TRIGGER AS 
-$$
-declare 
-	prom real;
-begin
+$body$
+DECLARE 
+	_prom real;
+BEGIN
 	--agrego al historico el cambio de departamento
 	INSERT into pelicula_historico(id_empleado,id_distribuidor,id_departamento,fecha_inicio,fecha_fin) 
-	VALUES(old.id_empleado,old.id_distribuidor,old.id_departamento,old.fecha_inicio,new.fecha_inicio); 
+	VALUES(OLD.id_empleado,OLD.id_distribuidor,OLD.id_departamento,OLD.fecha_inicio,NEW.fecha_inicio); 
 	--comprobar si existe el anterior	
-	if exists(	SELECT 1
+	IF EXISTS(	SELECT 1
 				FROM pelicula_historico_empleado AS phe
-				WHERE 	phe.id_empleado=old.id_empleado and
-						phe.id_departamento=old.id_departamento AND 
-						phe.id_distribuidor=old.id_distribuidor) then
+				WHERE 	phe.id_empleado=OLD.id_empleado AND
+						phe.id_departamento=OLD.id_departamento AND 
+						phe.id_distribuidor=OLD.id_distribuidor) THEN
 		--como ya existe, tengo que recalcular el promedio
-		SELECT avg(dif) into prom 
-		from
-		(	SELECT (extract( epoch FROM fecha_fin-fecha_inicio)/3600.0) AS "dif"
+		SELECT avg(dif) INTO _prom 
+		FROM
+		(	SELECT (EXTRACT( epoch FROM fecha_fin-fecha_inicio)/3600.0) AS "dif"
 			FROM pelicula_historico ph2
-			WHERE (ph2.id_empleado=old.id_empleado AND ph2.id_distribuidor=old.id_distribuidor AND ph2.id_departamento=old.id_departamento)) t1;
+			WHERE (ph2.id_empleado=OLD.id_empleado AND ph2.id_distribuidor=OLD.id_distribuidor AND ph2.id_departamento=OLD.id_departamento)) t1;
 		
-		UPDATE pelicula_historico_empleado SET promedio=prom 
-		WHERE id_empleado=old.id_empleado AND id_distribuidor=old.id_distribuidor AND id_departamento=old.id_departamento;
-	else
+		UPDATE pelicula_historico_empleado SET promedio=_prom 
+		WHERE id_empleado=OLD.id_empleado AND id_distribuidor=OLD.id_distribuidor AND id_departamento=OLD.id_departamento;
+	ELSE
 		INSERT into pelicula_historico_empleado(id_empleado,id_distribuidor,id_departamento,promedio) 
-		VALUES (old.id_empleado,old.id_distribuidor,old.id_departamento,extract(epoch FROM new.fecha_inicio-old.fecha_inicio)/3600.0);
-	end if;
-	return new;
+		VALUES (OLD.id_empleado,OLD.id_distribuidor,OLD.id_departamento,EXTRACT(epoch FROM NEW.fecha_inicio-OLD.fecha_inicio)/3600.0);
+	END IF;
+	RETURN NEW;
 	
 end
-$$
+$body$
 LANGUAGE 'plpgsql';
 
 --CONSULTAR
@@ -263,86 +256,86 @@ LANGUAGE 'plpgsql';
 --agregar TRIGGER BEFORE modificando la fecha:_inicioo
 --y utilizarla en el TRIGGER after
 
-CREATE OR REPLACE FUNCTION pelicula_logger_BEFORE()
+CREATE OR REPLACE FUNCTION pelicula_logger_before()
 RETURNS TRIGGER AS
-$$
-begin
-	new.fecha_inicio:=current_timestamp;
-	return new;
-end
-$$
+$body$
+BEGIN
+	NEW.fecha_inicio:=current_timestamp;
+	RETURN NEW;
+END
+$body$
 LANGUAGE 'plpgsql';
 
-CREATE TRIGGER pelicula_logger_BEFORE
-BEFORE UPDATE of id_departamento,id_distribuidor ON pelicula_empleado
+CREATE TRIGGER pelicula_logger_before
+BEFORE UPDATE OF id_departamento,id_distribuidor ON pelicula_empleado
 FOR EACH ROW
-EXECUTE PROCEDURE pelicula_logger_BEFORE();
+EXECUTE PROCEDURE pelicula_logger_before();
 
 
 --stored procedure que agrega los datos preexistentes, si los hubiera,
 --en la tabla pelicula_historico_empleado
 CREATE OR REPLACE PROCEDURE update_historico_empleado()
 LANGUAGE 'plpgsql'
-AS $$
+AS $body$
 declare
-	var record;--un registro, esto esta op toma los valores segun lo que le mandes
-	fechahoy timestamp;
+	_var record;--un registro, esto esta op toma los valores segun lo que le mandes
+	_fechahoy timestamp;
 begin
-	fechahoy:=current_timestamp;
-	for var in (
-		SELECT id_empleado,id_departamento,id_distribuidor,avg((extract( epoch FROM fecha_fin-fecha_inicio)/3600.0)) AS "horas"
+	_fechahoy:=current_timestamp;
+	FOR _var IN (
+		SELECT id_empleado,id_departamento,id_distribuidor,avg((EXTRACT( epoch FROM fecha_fin-fecha_inicio)/3600.0)) AS "horas"
 		FROM pelicula_historico AS ph
 		GROUP BY id_empleado,id_departamento,id_distribuidor)
-	loop
+	LOOP
 		INSERT into pelicula_historico_empleado(id_empleado,id_distribuidor,id_departamento,promedio) 
-		VALUES (var.id_empleado,var.id_distribuidor,var.id_departamento,var.horas);
-	end loop;
-	for var in (
+		VALUES (_var.id_empleado,_var.id_distribuidor,_var.id_departamento,_var.horas);
+	END LOOP;
+	FOR _var IN (
 		SELECT id_empleado,min(fecha_inicio) AS "fecha_entrada"
 		FROM pelicula_historico AS ph
 		GROUP BY id_empleado
 	)
-	loop
-		UPDATE pelicula_empleado emp SET horas_totales=(extract( epoch FROM fechahoy-var.fecha_entrada)/3600.0)
-		WHERE emp.id_empleado=var.id_empleado;
-	end loop;
-end;
-$$;
+	LOOP
+		UPDATE pelicula_empleado emp SET horas_totales=(EXTRACT( epoch FROM _fechahoy-_var.fecha_entrada)/3600.0)
+		WHERE emp.id_empleado=_var.id_empleado;
+	END LOOP;
+END;
+$body$;
 
 CREATE OR REPLACE PROCEDURE update_horas_empleado()
 LANGUAGE 'plpgsql'
 AS
-$$
-declare
-	var record;
-	fechahoy timestamp;
-begin
-	fechahoy:=current_timestamp;
-	for var in (
+$body$
+DECLARE
+	_var record;
+	_fechahoy timestamp;
+BEGIN
+	_fechahoy:=current_timestamp;
+	FOR _var IN (
 		SELECT id_empleado,min(fecha_inicio) AS "fecha_entrada"
 		FROM pelicula_historico AS ph
 		GROUP BY id_empleado
 	)
-	loop
-		UPDATE pelicula_empleado emp SET horas_totales=(extract( epoch FROM fechahoy-var.fecha_entrada)/3600.0)
-		WHERE emp.id_empleado=var.id_empleado;
-	end loop;
-end;
-$$;
+	LOOP
+		UPDATE pelicula_empleado emp SET horas_totales=(EXTRACT( epoch FROM _fechahoy-_var.fecha_entrada)/3600.0)
+		WHERE emp.id_empleado=_var.id_empleado;
+	END LOOP;
+END;
+$body$;
 
 
-SELECT id_empleado,id_departamento,id_distribuidor,avg((extract( epoch FROM fecha_fin-fecha_inicio)/3600.0))
+SELECT id_empleado,id_departamento,id_distribuidor,avg((EXTRACT( epoch FROM fecha_fin-fecha_inicio)/3600.0))
 FROM pelicula_historico AS ph
 GROUP BY id_empleado,id_departamento,id_distribuidor
 
 CREATE TRIGGER trigger_pelicula_logger
-AFTER UPDATE of id_departamento,id_distribuidor ON pelicula_empleado
+AFTER UPDATE OF id_departamento,id_distribuidor ON pelicula_empleado
 FOR EACH ROW
 EXECUTE PROCEDURE pelicula_logger();
 
 DROP TRIGGER trigger_pelicula_logger ON pelicula_empleado;
 
-DROP function pelicula_logger();
+DROP FUNCTION pelicula_logger();
 
 --modifico el valor de 	(7104,Juan C.,De,NULL,3489.00,De@gmail.com,1983-06-08,738-5664,5157,58,242,8357,2019-10-09 13:25:50,0)
 --por 					(7104,Juan C.,De,NULL,3489.00,De@gmail.com,1983-06-08,738-5664,5157,75,219,8357,2019-10-09 13:25:50,0)
@@ -380,33 +373,33 @@ CALL update_horas_empleado();
 
 CREATE OR REPLACE FUNCTION set_horas_aportadas()
 RETURNS TRIGGER AS
-$$
-begin
-	new.horas_aportadas:=0;
-	return new;
-end
-$$
+$body$
+BEGIN
+	NEW.horas_aportadas:=0;
+	RETURN NEW;
+END
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER set_horas_cero
-BEFORE UPDATE of id_tarea ON voluntario_voluntario
+BEFORE UPDATE OF id_tarea ON voluntario_voluntario
 FOR EACH ROW
 EXECUTE PROCEDURE set_horas_aportadas();
 
 CREATE OR REPLACE FUNCTION check_horas_aportadas()
 RETURNS TRIGGER AS
-$$
-begin
-	if(new.horas_aportadas NOT between old.horas_aportadas*0.9 AND old.horas_aportadas*1.1) then
-		raise exception 'Las horas aportadas no son validas';
-	end if;
-	return new;
-end;
-$$
+$body$
+BEGIN
+	IF(NEW.horas_aportadas NOT BETWEEN OLD.horas_aportadas*0.9 AND OLD.horas_aportadas*1.1) THEN
+		RAISE EXCEPTION 'Las horas aportadas no son validas';
+	END IF;
+	RETURN NET;
+END;
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER check_horas_aportadas
-BEFORE UPDATE of horas_aportadas ON voluntario_voluntario
+BEFORE UPDATE OF horas_aportadas ON voluntario_voluntario
 FOR EACH ROW
 EXECUTE PROCEDURE check_horas_aportadas();
 
@@ -426,7 +419,7 @@ UPDATE voluntario_voluntario SET horas_aportadas=3100 WHERE nro_voluntario=134;
 --########################################################################
 
 
-CREATE table tp3p1_ej3_textosporautor (
+CREATE TABLE tp3p1_ej3_textosporautor (
 	autor varchar(60) NOT NULL,
 	cant_textos numeric(4,0) NOT NULL,
 	fecha_ultima_public date NOT NULL,
@@ -436,10 +429,10 @@ CREATE table tp3p1_ej3_textosporautor (
 CREATE OR REPLACE PROCEDURE update_textosporautor()
 LANGUAGE 'plpgsql'
 AS
-$$
-declare
+$body$
+DECLARE
 --	 var record;
-begin
+BEGIN
 --	for var in (
 --		SELECT autor,count(*) AS "cant_textos",max(fecha_pub) AS "ultima"
 --		FROM tp3p1_ej3_articulo
@@ -454,9 +447,9 @@ begin
 	SELECT autor,count(*) AS "cant_textos",max(fecha_pub) AS "fecha_ultima_public"
 	FROM tp3p1_ej3_articulo
 	GROUP BY autor
-	having autor is NOT NULL;
-end;
-$$;
+	HAVING autor IS NOT NULL;
+END;
+$body$;
 
 SELECT autor,count(*),max(fecha_pub)
 FROM tp3p1_ej3_articulo
@@ -488,45 +481,44 @@ DELETE FROM tp3p1_ej3_textosporautor;
 
 
 
-CREATE OR REPLACE PROCEDURE update_single_row_textosporautor_INSERT(_autor varchar(60),_fecha date)
+CREATE OR REPLACE PROCEDURE update_single_row_textosporautor_insert(_autor varchar(60),_fecha date)
 LANGUAGE 'plpgsql'
 AS
-$$
-declare 
+$body$
+DECLARE 
 	_fecha_max date;
-begin
-	if exists(SELECT 1
+BEGIN
+	IF EXISTS (SELECT 1
 				FROM tp3p1_ej3_textosporautor AS t
-				WHERE t.autor=_autor) then
-		SELECT fecha_ultima_public into _fecha_max
+				WHERE t.autor=_autor) THEN
+		SELECT fecha_ultima_public INTO _fecha_max
 		FROM tp3p1_ej3_textosporautor t
 		WHERE t.autor=_autor;
-		if(_fecha_max<_fecha) then
+		IF(_fecha_max<_fecha) THEN
 			UPDATE tp3p1_ej3_textosporautor t SET cant_textos=cant_textos+1,fecha_ultima_public=_fecha WHERE t.autor=_autor;
-		else
+		ELSE
 			UPDATE tp3p1_ej3_textosporautor t SET cant_textos=cant_textos+1 WHERE t.autor=_autor;
-		end if;
-	else
+		END IF;
+	ELSE
 		INSERT into tp3p1_ej3_textosporautor(autor,cant_textos,fecha_ultima_public) VALUES (_autor,1,_fecha);
-	end if;
-end;
-$$;
+	END IF;
+END;
+$body$;
 
-CREATE OR REPLACE FUNCTION update_textosporautor_INSERT()
+CREATE OR REPLACE FUNCTION update_textosporautor_insert()
 RETURNS TRIGGER AS
-$$
-declare
-begin
-	call update_single_row_textosporautor_INSERT(new.autor,new.fecha_pub);
-	return new;
+$body$
+BEGIN
+	CALL update_single_row_textosporautor_insert(NEW.autor,NEW.fecha_pub);
+	RETURN NEW;
 end;
-$$
+$body$
 LANGUAGE 'plpgsql';
 
-CREATE TRIGGER update_textosporautor_INSERT
+CREATE TRIGGER update_textosporautor_insert
 AFTER INSERT ON tp3p1_ej3_articulo
 FOR EACH ROW
-EXECUTE PROCEDURE update_textosporautor_INSERT();
+EXECUTE PROCEDURE update_textosporautor_insert();
 
 INSERT INTO tp3p1_ej3_articulo(id_articulo,titulo,autor,nacionalidad,fecha_pub) VALUES(10,'Como ser forro','Horacio Raul Casado','Argentina',to_date('2019-12-25','YYYY-MM-DD'));
 
@@ -535,60 +527,60 @@ DELETE FROM tp3p1_ej3_articulo WHERE id_articulo = 10;
 CREATE OR REPLACE PROCEDURE update_single_row_textosporautor_delete(_autor varchar(60),_fecha date)
 LANGUAGE 'plpgsql'
 AS
-$$
-declare
+$body$
+DECLARE
 	_var record;
 	_aux date;
-begin
-	raise NOTice 'despues de %',_autor;
+BEGIN
+	RAISE NOTICE 'despues de %',_autor;
 	SELECT t.* into _var
 	FROM tp3p1_ej3_textosporautor AS t
 	WHERE t.autor=_autor;
-	if(_var.cant_textos=1) then
-		delete FROM tp3p1_ej3_textosporautor WHERE autor=_autor;
-	else
+	IF(_var.cant_textos=1) then
+		DELETE FROM tp3p1_ej3_textosporautor WHERE autor=_autor;
+	ELSE
 		
-		SELECT max(fecha_pub) into _aux
+		SELECT max(fecha_pub) INTO _aux
 		FROM tp3p1_ej3_articulo a
 		WHERE a.autor=_autor
 		GROUP BY a.autor;
-		if(_var.fecha_ultima_public=_fecha) then
+		IF(_var.fecha_ultima_public=_fecha) THEN
 			UPDATE tp3p1_ej3_textosporautor SET cant_textos=cant_textos-1,fecha_ultima_public=_aux WHERE autor=_autor;
-		else
+		ELSE
 			UPDATE tp3p1_ej3_textosporautor SET cant_textos=cant_textos-1 WHERE autor=_autor;
-		end if;
-	end if;
-end;
-$$;
+		END IF;
+	END IF;
+END;
+$body$;
 
 
 CREATE OR REPLACE FUNCTION update_textosporautor_update()
 RETURNS TRIGGER AS
-$$
-declare 
+$body$
+DECLARE 
 	_var record;
 	_aux date;
-begin
-	if(old.autor!=new.autor) then
-		call update_single_row_textosporautor_INSERT(new.autor,new.fecha_pub);
-		call update_single_row_textosporautor_delete(old.autor,old.fecha_pub);
-	else
-		IF(OLD.fecha_pub!=NEW.fecha_pub) then
-			SELECT t.* into _var
+BEGIN
+	IF(OLD.autor!=NEW.autor) THEN
+		CALL update_single_row_textosporautor_INSERT(NEW.autor,NEW.fecha_pub);
+		CALL update_single_row_textosporautor_delete(OLD.autor,OLD.fecha_pub);
+	ELSE
+		IF(OLD.fecha_pub!=NEW.fecha_pub) THEN
+			SELECT t.* INTO _var
 			FROM tp3p1_ej3_textosporautor
 			WHERE t.autor=old.autor;
 			IF(NEW.fecha_pub>_var.fecha_ultima_public) THEN
-				UPDATE tp3p1_ej3_textosporautor SET fecha_ultima_public=NEW.fecha_pub WHERE autor=old.autor;
+				UPDATE tp3p1_ej3_textosporautor SET fecha_ultima_public=NEW.fecha_pub WHERE autor=OLD.autor;
 			END IF;
 		END IF;
 	END IF;
 	RETURN NEW;
 END;
-$$
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER update_textosporautor_update
-AFTER UPDATE of autor,fecha_pub ON tp3p1_ej3_articulo
+AFTER UPDATE OF autor,fecha_pub ON tp3p1_ej3_articulo
 FOR EACH ROW
 EXECUTE PROCEDURE update_textosporautor_update();
 
@@ -596,20 +588,20 @@ UPDATE tp3p1_ej3_articulo SET autor='Dana Mariel Alvarez y Martinez' WHERE id_ar
 
 CREATE OR REPLACE FUNCTION update_textosporautor_delete()
 RETURNS TRIGGER AS
-$$
+$body$
 BEGIN
-	CALL update_single_row_textosporautor_delete(old.autor,old.fecha_pub);
+	CALL update_single_row_textosporautor_delete(OLD.autor,OLD.fecha_pub);
 	RETURN NEW;
 END;
-$$
+$body$
 LANGUAGE 'plpgsql';
 
 CREATE TRIGGER update_textosporautor_delete
-AFTER delete ON tp3p1_ej3_articulo
+AFTER DELETE ON tp3p1_ej3_articulo
 FOR EACH ROW
 EXECUTE PROCEDURE update_textosporautor_delete();
 
-delete FROM tp3p1_ej3_articulo WHERE id_articulo=9;
+DELETE FROM tp3p1_ej3_articulo WHERE id_articulo=9;
 
 
 SELECT *

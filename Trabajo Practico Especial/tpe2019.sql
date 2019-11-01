@@ -234,6 +234,12 @@ ALTER TABLE G06_MOV_INTERNO
 	REFERENCES G06_MOVIMIENTO(id_movimiento)
 ;
 
+
+--########################################################################
+--INSERCCION DE DATOS DESDE EL ESQUEMA
+--########################################################################
+
+
 INSERT INTO g06_cliente
 SELECT * FROM unc_tpe2019.cliente
 
@@ -248,6 +254,8 @@ SELECT * FROM unc_tpe2019.fila
 
 INSERT INTO g06_posicion
 SELECT * FROM unc_tpe2019.posicion 
+
+
 
 
 SELECT *
@@ -265,5 +273,70 @@ FROM unc_tpe2019.movimiento
 
 
 
+ALTER TABLE G06_MOVIMIENTO ADD CONSTRAINT ck_ultimo_movimiento
+CHECK (
+	NOT EXISTS (
+		SELECT 1
+		FROM G06_MOVIMIENTO
+		WHERE tiipo = 's' AND m.id_mov_ant <> (	SELECT id_movimiento
+												FROM G06_MOVIMIENTO
+												WHERE tipo <> 's' AND cod_pallet = m.cod_pallet AND fecha < m.fecha
+												ORDER BY fecha DESC
+												LIMIT 1
+		)
+		
+	)
+);
 
+CREATE OR REPLACE FUNCTION FN_G06_C11(_porcentaje real)
+RETURNS TABLE(	nro_estanteria int,
+				nombre_estanteria varchar(80))
+AS
+$$
+BEGIN
+	RETURN QUERY
+	SELECT *
+	FROM g06_estanteria e
+	WHERE e.nro_estanteria IN (	SELECT ext.nro_estanteria
+								FROM g06_posicion ext
+								WHERE ext.estado = 'OCUPADO'
+								GROUP BY ext.nro_estanteria
+								HAVING count(ext.id_pos)>_porcentaje*(	SELECT count(*)
+																		FROM g06_posicion p
+																		WHERE ext.nro_estanteria = p.nro_estanteria));
+	RETURN ;
+END;
+$$
+LANGUAGE 'plpgsql';
 
+DROP FUNCTION FN_G06_C11;
+
+SELECT	*
+FROM FN_G06_C11(0.2);
+
+INSERT INTO g06_fila
+SELECT * FROM unc_tpe2019.fila;
+
+INSERT INTO g06_estanteria
+SELECT * FROM unc_tpe2019.estanteria AS e;
+
+INSERT INTO g06_posicion
+SELECT * FROM unc_tpe2019.posicion AS p
+
+INSERT INTO g06_posicion(id_pos,nro_posicion,nro_estanteria,nro_fila,estado,por_global) VALUES (288,1,-11,2,'OCUPADO',2);
+INSERT INTO g06_fila(nro_estanteria,nro_fila,nombre_fila,peso_max_kg) VALUES (-11,2,'null',0);
+INSERT INTO g06_estanteria(nro_estanteria,nombre_estanteria) VALUES (-11, 'ESTANTERIA -11');
+ 
+SELECT * FROM g06_estanteria AS ge
+
+SELECT *
+FROM unc_tpe2019.posicion
+WHERE nro_estanteria=288
+
+SELECT *
+FROM g06_posicion AS gp
+
+SELECT *
+FROM g06_estanteria AS ge
+
+SELECT * FROM g06_fila AS gf
