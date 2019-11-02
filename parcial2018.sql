@@ -5,7 +5,7 @@
 
 
 --Este query devuelve "Las habitaciones ubicadas en la ciudad "Terrance" cuyo
---precio por noche de la habitación es mayor a 45
+--precio por noche de la habitacion es mayor a 45
 SELECT h.*
 FROM unc_esq_dptos.departamento d
 NATURAL JOIN unc_esq_dptos.habitacion h
@@ -16,8 +16,8 @@ WHERE h.precio_noche > 45 AND d.cod_ciudad = 13;
 --########################################################################
 
 
---Se desea controlar que un mismo propietario no tenga más de 4 departamentos en
---alquiler. El recurso declarativo en sql estándar seria restriccion de tabla
+--Se desea controlar que un mismo propietario no tenga mas de 4 departamentos en
+--alquiler. El recurso declarativo en sql estandar seria restriccion de tabla
 
 
 --PREGUNTA 3
@@ -35,9 +35,9 @@ CHECK (NOT EXISTS ( SELECT 1
 --########################################################################				
 				
 				
---Se desea controlar que un propietario, en caso de tener algún departamento de una
---habitación, no posea más de 4 departamentos en total. El recurso declarativo en sql
---estándar seria restriccion general (assertion)
+--Se desea controlar que un propietario, en caso de tener algun departamento de una
+--habitacion, no posea mas de 4 departamentos en total. El recurso declarativo en sql
+--estandar seria restriccion general (assertion)
 /*
 CREATE ASSERTION as_mas_4_dptos_si_tiene_1hab CHECK (	SELECT d.tipo_doc,d.nro_doc
 														FROM unc_esq_dptos.departamento d
@@ -55,13 +55,13 @@ CREATE ASSERTION as_mas_4_dptos_si_tiene_1hab CHECK (	SELECT d.tipo_doc,d.nro_do
 --########################################################################	
 
 
---Seleccione cuál/es de las siguientes operaciones son evento/s crítico/s asociado/s
---a la restricción anterior
---Modificación de id_dpto en Habitación.
---Insercción en Habitación
---Eliminación en Habitacion
+--Seleccione cual/es de las siguientes operaciones son evento/s critico/s asociado/s
+--a la restriccion anterior
+--Modificacion de id_dpto en Habitacion.
+--Inserccion en Habitacion
+--Eliminacion en Habitacion
 --Inserccion en Departamento
---Modificación de tipo_doc,nro_doc en Departamento
+--Modificacion de tipo_doc,nro_doc en Departamento
 
 													
 --PREGUNTA 6
@@ -228,8 +228,40 @@ SELECT id_dpto
 FROM unc_esq_dptos.departamento
 
 
+--PREGUNTA 7
+--########################################################################
 
 
+--Utilizando el metodo que Ud. crea mas adecuado, resolver e implementar en PostgreSQL el
+--servicio que: dada dos fechas, permita obtener un listado por huesped con el tiempo total
+--(en dias) que tuvo reservadas solo habitaciones con cocinas.
 
 
+CREATE OR REPLACE FUNCTION FN_listar_huesped(_fecha_inf date,fecha_sup date)
+RETURNS TABLE(	tipo_doc bpchar(3),
+				nro_doc NUMERIC(11,0),
+				duracion integer)
+AS
+$BODY$
+BEGIN
+	RETURN QUERY
+	SELECT r.tipo_doc,r.nro_doc,r.fecha_hasta-r.fecha_desde AS "duracion"
+	FROM dptos_reserva r
+	JOIN dptos_reserva_hab h ON (r.id_reserva=h.id_reserva)
+	JOIN dptos_habitacion hab ON (h.id_habitacion=hab.id_habitacion AND h.id_dpto=hab.id_dpto)
+	WHERE (r.fecha_reserva BETWEEN _fecha_inf AND fecha_sup) AND (hab.cocina);
+END;
+$BODY$
+LANGUAGE 'plpgsql';
+
+DROP FUNCTION FN_listar_huesped;
+
+
+SELECT *
+FROM fn_listar_huesped(to_date('2017-11-23','YYYY-MM-DD'), to_date('2017-12-04','YYYY-MM-DD'));
+
+SELECT tipo_doc,nro_doc,EXTRACT( DAY FROM age(fecha_hasta,fecha_desde)) AS "duracion"
+FROM dptos_reserva
+JOIN 
+WHERE fecha_reserva BETWEEN to_date('2017-11-23','YYYY-MM-DD') AND to_date('2017-12-04','YYYY-MM-DD')
 
