@@ -265,3 +265,60 @@ FROM dptos_reserva
 JOIN 
 WHERE fecha_reserva BETWEEN to_date('2017-11-23','YYYY-MM-DD') AND to_date('2017-12-04','YYYY-MM-DD')
 
+
+--PREGUNTA 8
+--########################################################################
+
+
+--Proveea la sentencia SQL para definir la vista "EstadoReserva" conteniendo el indentificador
+--y el estado de cancelacion de las reservas que hayan recibido algun pago mayor a $ 1050
+
+
+CREATE VIEW parcial_2018_EstadoReserva AS
+	SELECT id_reserva,cancelada
+	FROM dptos_reserva
+	WHERE id_reserva IN (	SELECT id_reserva
+							FROM dptos_pago
+							WHERE importe>1050)
+;
+
+
+--PREGUNTA 9
+--########################################################################
+
+
+CREATE VIEW parcial_2018_EstadoReserva_no_updateable AS
+	SELECT r.id_reserva,r.cancelada
+	FROM dptos_reserva r
+	JOIN dptos_pago p ON (r.id_reserva=p.id_reserva)
+	WHERE p.importe>1050
+;
+
+
+--PREGUNTA 10
+--########################################################################
+
+
+--Dadas las siguientes vistas
+CREATE VIEW HabitacionSimple AS
+SELECT H.*
+FROM Habitacion H
+WHERE H.posib_carnas simples > 3
+WITH LOCAL CHECK OPTFON,
+
+CREATE VIEW HabitacionMix AS
+SELECT H.*
+FROM HabitacionSimple H
+WHERE H.frigObat = 1
+WITH LOCAL CHECK OPTION;
+--Cual seria el resultadc si se ejecutan las sigaientes sentencias (en el orden dada). Tener en cuenta que el 'ego de los valores se
+--completan con datos validos.
+INSERT INTO HabitacionMix (id_dpto,id_habitacion,posib_camas_simples,frigobar,...) VALUES (66, 1, 5, 2)
+INSERT INTO HabitacionMix (id_dpto,id_habitacion,posib_camas_simples,frigobar,...) VALUES (66, 1, 4, 1)
+INSERT INTO HabitacionSimple (id_dpto,id_habitacion,posib_camas_simples,frigobar,...) VALUES (330, 1, 2, 1)
+INSERT INTO HabitacionSimple (id_dpto,id_habitacion,posib_camas_simples,frigobar,...) VALUES (66, 1, 5, 1)
+
+
+--Si son acumulables falla, procede, falla, falla
+--Si no son acumulables falla, procede, falla, procede
+
