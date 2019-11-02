@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="sql" deleted="false" description="" enabled="true" name="as">INSERT INTO g06_${empleado}
+SELECT * FROM unc_tpe2019.${empleado}</template><template autoinsert="true" context="sql" deleted="false" description="Creates a trigger function." enabled="true" name="createfn">CREATE OR REPLACE FUNCTION ${fn_name}()
+RETURNS TRIGGER AS
+${dollar}BODY${dollar}
+BEGIN
+	RETURN new;
+END;
+${dollar}BODY${dollar}
+LANGUAGE 'plpgsql';</template><template autoinsert="true" context="sql" deleted="false" description="Create a fucntion that returns a table." enabled="true" name="createfntb">CREATE OR REPLACE FUNCTION FN_${fn_name}()
+RETURNS TABLE(	${att} int)
+AS
+$$BODY$$
+BEGIN
+	RETURN QUERY
+	SELECT *
+	FROM ${tabla}
+END;
+$$BODY$$
+LANGUAGE 'plpgsql';</template><template autoinsert="true" context="sql" deleted="false" description="Create procedure." enabled="true" name="createpr">CREATE OR REPLACE PROCEDURE ${pr_name}()
+LANGUAGE 'plpgsql'
+AS
+${dollar}BODY${dollar}
+BEGIN
+	
+END;
+${dollar}BODY${dollar};
+</template><template autoinsert="true" context="sql" deleted="false" description="Create table with primary key." enabled="true" name="createtb">CREATE TABLE ${name} (
+	${pk_name} ${pk_type} NOT NULL,
+	CONSTRAINT PK_${name} PRIMARY KEY(${pk_name})
+);</template><template autoinsert="true" context="sql" deleted="false" description="Create trigger." enabled="true" name="createtr">CREATE TRIGGER ${tr_name}
+${when} ${event} ON ${table_name}
+${granularity}
+EXECUTE PROCEDURE ${fn_name}();</template><template autoinsert="true" context="sql" deleted="false" description="Create a view." enabled="true" name="createvw">CREATE VIEW ${view_name} AS
+	SELECT *
+	FROM ${table_name}
+;</template><template autoinsert="true" context="sql" deleted="false" description="Alter table add foreign key." enabled="true" name="fk">ALTER TABLE ${table}
+	ADD CONSTRAINT FK_${table}_${table_ref} FOREIGN KEY(${fk})
+	REFERENCES ${table_ref}(${fk})
+;</template><template autoinsert="true" context="sql" deleted="false" description="Alter table add foreign key with referential action." enabled="true" name="fkref">ALTER TABLE ${table}
+	ADD CONSTRAINT FK_${table}_${table_ref} FOREIGN KEY(${fk})
+	REFERENCES ${table_ref}(${fk})
+		ON UPDATE ${update}
+		ON DELETE ${delete}
+;</template><template autoinsert="true" context="sql" deleted="false" description="Alter table add foreign key with referential action and match." enabled="true" name="fkrefm">alter table ${table}
+	add constraint fk_${table}_${table_ref} foreign key(${fk})
+	references ${table_ref}(${fk})
+		match ${match_type}
+		on update ${update}
+		on delete ${delete}
+;</template><template autoinsert="true" context="sql" deleted="false" description="Raise notice with current line number." enabled="true" name="raisen">raise notice 'despues de ${ant_inst}';</template><template autoinsert="true" context="sql" deleted="false" description="select count with group by" enabled="true" id="org.jkiss.dbeaver.templates.scgb" name="scgb">select ${col:column(table)},count(*)
+    from ${table} t group by ${col};</template><template autoinsert="true" context="sql" deleted="false" description="select row count" enabled="true" id="org.jkiss.dbeaver.templates.scount" name="scount">select count(*) from ${table};</template><template autoinsert="true" context="sql" deleted="false" description="select * from " enabled="true" id="org.jkiss.dbeaver.templates.sf" name="sf">select * from ${table};</template><template autoinsert="true" context="sql" deleted="false" description="select with order by" enabled="true" id="org.jkiss.dbeaver.templates.scob" name="sob">select * from ${table} t order by ${column};</template><template autoinsert="true" context="sql" deleted="false" description="select with condition" enabled="true" id="org.jkiss.dbeaver.templates.swhere" name="swhere">select * from ${table} where ${column}='${value}';</template><template autoinsert="true" context="sql" deleted="false" description="Añade tabla de analisis de triggers." enabled="true" name="tablatr">/*
++==============================+=========================================+=========================================+=========================================+
+|            Tablas            |                 Insert                  |                 Update                  |                 Delete                  |
++==============================+=========================================+=========================================+=========================================+
+| Tabla1                       | Atributo1,Atributo2,Atributo3,Atributo4 | Atributo1,Atributo2,Atributo3,Atributo4 | Atributo1,Atributo2,Atributo3,Atributo4 |
++------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
+| TABLA CON NOMBRE HYPER LARGO |                                         |                                         |                                         |
++------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
+| Tabla3                       |                                         |                                         |                                         |
++------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
+| Tabla4                       |                                         |                                         |                                         |
++------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
+*/
+</template></templates>
