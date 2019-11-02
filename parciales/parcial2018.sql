@@ -321,4 +321,4 @@ INSERT INTO HabitacionSimple (id_dpto,id_habitacion,posib_camas_simples,frigobar
 
 --Si son acumulables falla, procede, falla, falla
 --Si no son acumulables falla, procede, falla, procede
-
+a
