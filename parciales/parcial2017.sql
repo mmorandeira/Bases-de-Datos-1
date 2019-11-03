@@ -162,7 +162,7 @@ CHECK (NOT EXISTS (	SELECT 1
 --b. Actualizacion de idTurno en Comprobante
 --e. Actualizacion de idPersonal en Turno
 
-CREATE OR REPLACE FUNCTION FN_parcial2017_max_factura_70()
+CREATE OR REPLACE FUNCTION FN_parcial2017_max_factura_70_comprobante()
 RETURNS TRIGGER AS
 $BODY$
 DECLARE
@@ -177,7 +177,7 @@ BEGIN
 					JOIN wireless_turno t ON (c.id_turno=t.id_turno)
 					WHERE t.id_personal=_empleado
 					GROUP BY t.id_personal
-					HAVING count(*) > 0.7*(SELECT count(*) FROM wireless_comprobante))
+					HAVING count(*) > 0.7*(SELECT count(*) FROM wireless_comprobante)) THEN 
 			RAISE EXCEPTION 'No se permite que un empleado tenga mas del 70% de facturas';
 		END IF;
 	ELSE
@@ -193,17 +193,63 @@ LANGUAGE 'plpgsql';
 CREATE TRIGGER TR_parcial2017_max_factura_70
 BEFORE INSERT OR UPDATE OF id_turno ON wireless_comprobante
 FOR EACH ROW
-EXECUTE PROCEDURE FN_parcial2017_max_factura_70();
+EXECUTE PROCEDURE FN_parcial2017_max_factura_70_comprobante();
+
+CREATE OR REPLACE FUNCTION FN_parcial2017_max_factura_70_turno()
+RETURNS TRIGGER AS
+$BODY$
+DECLARE
+	_cantidad int;
+BEGIN
+	SELECT count(*) INTO _cantidad
+	FROM wireless_comprobante c
+	JOIN wireless_turno t ON (c.id_turno=t.id_turno)
+	WHERE t.id_personal=NEW.id_personal;
+	IF EXISTS (	SELECT 1
+				FROM wireless_comprobante c
+				JOIN wireless_turno t ON (c.id_turno=t.id_turno)
+				WHERE t.id_turno=OLD.id_turno
+				GROUP BY t.id_personal
+				HAVING count(*) + _cantidad > 0.7*(SELECT count(*) FROM wireless_comprobante)) THEN
+		RAISE EXCEPTION 'No se permite que un empleado tenga mas del 70% de facturas';
+	END IF;
+	RETURN new;
+END;
+$BODY$
+LANGUAGE 'plpgsql';
 
 CREATE TRIGGER TR_parcial2017_max_factura_70
-BEFORE UPDATE ON wireless_turno
+BEFORE UPDATE OF id_personal ON wireless_turno
 FOR EACH ROW
-EXECUTE PROCEDURE FN_fn_name();
+EXECUTE PROCEDURE FN_parcial2017_max_factura_70_turno();
 
 
 
 --EJERCICIO 8
 --########################################################################
+
+
+--Indique cual/es de las siguientes afrimaciones es/son verdadera/s para la operacion:
+DELETE FROM wireless_comprobante
+WHERE id_comp=28 AND id_tcomp=1;
+
+--La opcion correcta es:
+--a. No se puede eliminar el comprobante (28,1) si no se eliminan previamente sus lineas asociadas
+
+--28	1	2011-01-03 00:00:00	5	dolor elit,		2011-01-13 00:00:00		203.00000	89
+SELECT *
+FROM wireless_comprobante
+WHERE id_comp=28 AND id_tcomp=1;
+
+SELECT *
+FROM wireless_lineacomprobante
+WHERE id_comp=28 AND id_tcomp=1;
+
+
+--EJERCICIO 9
+--########################################################################
+
+
 
 
 
