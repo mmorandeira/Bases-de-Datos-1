@@ -6,3 +6,6 @@
 # -f el nombre del archivo que se va a importar
 psql -h 10.1.6.30 -d cursada -U unc_248557 -f 'dump_voluntario.sql'
 
+
+pg_dump -h dbases.exa.unicen.edu.ar --port 6432 -d cursada -U unc_248557 -n unc_esq_wireless > dump_wireless.sql
+
