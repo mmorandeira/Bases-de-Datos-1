@@ -84,7 +84,7 @@ CREATE TABLE G06_POSICION (
     nro_estanteria int NOT NULL,
     nro_fila int NOT NULL,
     estado char(12) NOT NULL,
-    por_global int NOT NULL,
+    pos_global int NOT NULL,
     CONSTRAINT PK_G06_POSICION PRIMARY KEY (id_pos),
     CONSTRAINT UQ_G06_POSICION_NRO_POSICION_NRO_FILA_NRO_ESTANTERIA UNIQUE (nro_posicion, nro_fila, nro_estanteria)
 );
@@ -206,7 +206,7 @@ ALTER TABLE G06_MOVIMIENTO
 
 ALTER TABLE G06_MOVIMIENTO
     ADD CONSTRAINT FK_G06_MOVIMIENTO_POSICION FOREIGN KEY (id_pos)
-    REFERENCES _POSICION (id_pos)
+    REFERENCES G06_POSICION (id_pos)
 ;
 
 ALTER TABLE G06_MOV_SALIDA
@@ -240,103 +240,56 @@ ALTER TABLE G06_MOV_INTERNO
 --########################################################################
 
 
-INSERT INTO g06_cliente
-SELECT * FROM unc_tpe2019.cliente
+INSERT INTO g06_cliente (cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq)
+SELECT cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq FROM unc_tpe2019.cliente;
 
-INSERT INTO g06_pallet
-SELECT * FROM unc_tpe2019.pallet
+INSERT INTO g06_pallet (cod_pallet,descripcion,peso,tipo)
+SELECT cod_pallet,descripcion,peso,tipo FROM unc_tpe2019.pallet;
 
-INSERT INTO g06_estanteria
-SELECT * FROM unc_tpe2019.estanteria
+INSERT INTO g06_estanteria (nro_estanteria,nombre_estanteria)
+SELECT nro_estanteria,nombre_estanteria FROM unc_tpe2019.estanteria;
 
-INSERT INTO g06_fila 
-SELECT * FROM unc_tpe2019.fila
+INSERT INTO g06_fila (nro_estanteria,nro_fila,nombre_fila,peso_max_kg)
+SELECT nro_estanteria,nro_fila,nombre_fila,peso_max_kg FROM unc_tpe2019.fila;
 
-INSERT INTO g06_posicion
-SELECT * FROM unc_tpe2019.posicion 
+INSERT INTO g06_posicion (id_pos,nro_posicion,nro_estanteria,nro_fila,estado,pos_global)
+SELECT id_pos,nro_posicion,nro_estanteria,nro_fila,estado,pos_global FROM unc_tpe2019.posicion ;
+
+INSERT INTO g06_empleado (tipo_doc,nro_doc,apellido,nombre,tel_contacto,fecha_alta,fecha_baja,tipo)
+SELECT tipo_doc,nro_doc,apellido,nombre,tel_contacto,fecha_alta,fecha_baja,tipo FROM unc_tpe2019.empleado;
+
+INSERT INTO g06_zona (id_zona,descripcion,tipo)
+SELECT id_zona,descripcion,tipo FROM unc_tpe2019.zona;
+
+INSERT INTO g06_zona_posicion (id_pos,fecha,id_zona)
+SELECT id_pos,fecha,id_zona FROM unc_tpe2019.zona_posicion;
+
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+SELECT id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet FROM unc_tpe2019.movimiento;
+
+INSERT INTO g06_mov_entrada (id_movimiento,transporte,guia)
+SELECT id_movimiento,transporte,guia FROM unc_tpe2019.mov_entrada;
+
+INSERT INTO g06_mov_salida (id_movimiento,transporte,guia)
+SELECT * FROM unc_tpe2019.mov_salida;
+
+INSERT INTO g06_mov_interno(id_movimiento,razon,id_pos)
+SELECT id_movimiento,razon,id_pos FROM unc_tpe2019.mov_interno;
+
+INSERT INTO g06_alquiler(id_alquiler,id_cliente,tipo_alquiler,fecha_desde,fecha_hasta,importe_dia)
+SELECT id_alquiler,id_cliente,tipo_alquiler,fecha_desde,fecha_hasta,importe_dia FROM unc_tpe2019.alquiler;
+
+INSERT INTO g06_alquiler_posicion(id_alquiler, id_pos)
+SELECT id_alquiler,id_pos FROM unc_tpe2019.alquiler_posicion;
+
+INSERT INTO g06_movimiento_cc(id_mov_cc, fecha, cuit_cuil, importe, tipo_doc, nro_doc)
+SELECT id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc FROM unc_tpe2019.movimiento_cc;
+
+INSERT INTO g06_linea_alquiler(id_liquidacion,id_alquiler,id_pos,importe,id_mov_cc)
+SELECT id_liquidacion,id_alquiler,id_pos,importe,id_mov_cc FROM unc_tpe2019.linea_alquiler;
 
 
 
 
-SELECT *
-FROM unc_tpe2019.mov_salida
-
-SELECT *
-FROM unc_tpe2019.movimiento a
-WHERE cod_pallet='39214160'
-ORDER BY fecha
 
 
-SELECT *
-FROM unc_tpe2019.movimiento
-
-
-
-
-ALTER TABLE G06_MOVIMIENTO ADD CONSTRAINT ck_ultimo_movimiento
-CHECK (
-	NOT EXISTS (
-		SELECT 1
-		FROM G06_MOVIMIENTO
-		WHERE tiipo = 's' AND m.id_mov_ant <> (	SELECT id_movimiento
-												FROM G06_MOVIMIENTO
-												WHERE tipo <> 's' AND cod_pallet = m.cod_pallet AND fecha < m.fecha
-												ORDER BY fecha DESC
-												LIMIT 1
-		)
-		
-	)
-);
-
-CREATE OR REPLACE FUNCTION FN_G06_C11(_porcentaje real)
-RETURNS TABLE(	nro_estanteria int,
-				nombre_estanteria varchar(80))
-AS
-$$
-BEGIN
-	RETURN QUERY
-	SELECT *
-	FROM g06_estanteria e
-	WHERE e.nro_estanteria IN (	SELECT ext.nro_estanteria
-								FROM g06_posicion ext
-								WHERE ext.estado = 'OCUPADO'
-								GROUP BY ext.nro_estanteria
-								HAVING count(ext.id_pos)>_porcentaje*(	SELECT count(*)
-																		FROM g06_posicion p
-																		WHERE ext.nro_estanteria = p.nro_estanteria));
-	RETURN ;
-END;
-$$
-LANGUAGE 'plpgsql';
-
-DROP FUNCTION FN_G06_C11;
-
-SELECT	*
-FROM FN_G06_C11(0.2);
-
-INSERT INTO g06_fila
-SELECT * FROM unc_tpe2019.fila;
-
-INSERT INTO g06_estanteria
-SELECT * FROM unc_tpe2019.estanteria AS e;
-
-INSERT INTO g06_posicion
-SELECT * FROM unc_tpe2019.posicion AS p
-
-INSERT INTO g06_posicion(id_pos,nro_posicion,nro_estanteria,nro_fila,estado,por_global) VALUES (288,1,-11,2,'OCUPADO',2);
-INSERT INTO g06_fila(nro_estanteria,nro_fila,nombre_fila,peso_max_kg) VALUES (-11,2,'null',0);
-INSERT INTO g06_estanteria(nro_estanteria,nombre_estanteria) VALUES (-11, 'ESTANTERIA -11');
- 
-SELECT * FROM g06_estanteria AS ge
-
-SELECT *
-FROM unc_tpe2019.posicion
-WHERE nro_estanteria=288
-
-SELECT *
-FROM g06_posicion AS gp
-
-SELECT *
-FROM g06_estanteria AS ge
-
-SELECT * FROM g06_fila AS gf

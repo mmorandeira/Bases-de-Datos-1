@@ -126,6 +126,7 @@ EXECUTE PROCEDURE FN_parcial2017_max_equipo_serv();
 
 
 --El recurso declarativo a utilizar seria un assertion
+--a. una restriccion general
 
 
 --EJERCICIO 6
@@ -152,7 +153,7 @@ CHECK (NOT EXISTS (	SELECT 1
 +==============================+=========================================+=========================================+=========================================+
 |            Tablas            |                 Insert                  |                 Update                  |                 Delete                  |
 +==============================+=========================================+=========================================+=========================================+
-| Comprobante                  | Si                                      | id_turno                                | No                                      |
+| Comprobante                  | Si                                      | id_turno                                | Si                                      |
 +------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
 | Turno                        | No                                      | id_personal                             | No                                      |
 +------------------------------+-----------------------------------------+-----------------------------------------+-----------------------------------------+
@@ -168,24 +169,29 @@ $BODY$
 DECLARE
 	_empleado int;
 BEGIN
-	SELECT id_personal INTO _empleado
-	FROM wireless_turno
-	WHERE id_turno=NEW.id_turno;
-	IF (_empleado IS NOT NULL) THEN
-		IF EXISTS (	SELECT 1
-					FROM wireless_comprobante c
-					JOIN wireless_turno t ON (c.id_turno=t.id_turno)
-					WHERE t.id_personal=_empleado
-					GROUP BY t.id_personal
-					HAVING count(*) > 0.7*(SELECT count(*) FROM wireless_comprobante)) THEN 
-			RAISE EXCEPTION 'No se permite que un empleado tenga mas del 70% de facturas';
+	IF (tg_op='INSERT' OR tg_op='UPDATE') THEN
+		SELECT id_personal INTO _empleado
+		FROM wireless_turno
+		WHERE id_turno=NEW.id_turno;
+		IF (_empleado IS NOT NULL) THEN
+			IF EXISTS (	SELECT 1
+						FROM wireless_comprobante c
+						JOIN wireless_turno t ON (c.id_turno=t.id_turno)
+						WHERE t.id_personal=_empleado
+						GROUP BY t.id_personal
+						HAVING count(*) > 0.7*(SELECT count(*) FROM wireless_comprobante)) THEN 
+				RAISE EXCEPTION 'No se permite que un empleado tenga mas del 70% de facturas';
+			END IF;
+		ELSE
+			IF (NEW.id_turno IS NOT NULL) THEN
+				RAISE EXCEPTION 'id_turno no encontrado';
+			END IF;
 		END IF;
-	ELSE
-		IF (NEW.id_turno IS NOT NULL) THEN
-			RAISE EXCEPTION 'id_turno no encontrado';
-		END IF;
+		RETURN new;
 	END IF;
-	RETURN new;
+	IF (tg_op='DELETE') THEN
+	
+	END IF;
 END;
 $BODY$
 LANGUAGE 'plpgsql';
@@ -235,6 +241,8 @@ WHERE id_comp=28 AND id_tcomp=1;
 
 --La opcion correcta es:
 --a. No se puede eliminar el comprobante (28,1) si no se eliminan previamente sus lineas asociadas
+--porque la restriccion lineacomprobante<<comprobante(r:r) no deja eliminar un comprobante mientras
+--este sea referenciado por lineas de comprobante
 
 --28	1	2011-01-03 00:00:00	5	dolor elit,		2011-01-13 00:00:00		203.00000	89
 SELECT *
@@ -250,10 +258,49 @@ WHERE id_comp=28 AND id_tcomp=1;
 --########################################################################
 
 
+UPDATE wireless_comprobante SET id_comp=7 WHERE id_comp=6;
+--La opcion correcta es:
+--e. ninguna de las opciones es correcta
+--porque la restriccion lineacomprobante<<comprobante(r:r) no deja eliminar un comprobante mientras
+--este sea referenciado por lineas de comprobante
 
 
+--EJERCICIO 10
+--########################################################################
 
 
+--porque la restriccion lineacomprobante<<comprobante(r:r) no deja eliminar un comprobante mientras
+--este sea referenciado por lineas de comprobante
+--por lo tanto como esta siendo referenciado por lineas de comprobantes no se deja ni modificar la clave
+--ni eliminarla
+
+
+--EJERCICIO 11
+--########################################################################
+
+
+CREATE VIEW parcial_2017_ultimos_comprobantes AS
+SELECT *
+FROM wireless_comprobante
+WHERE fecha > current_date - '15 day'::INTERVAL
+WITH LOCAL CHECK OPTION;
+
+CREATE VIEW parcial_2017_facturas AS
+SELECT *
+FROM parcial_2017_ultimos_comprobantes
+WHERE id_tcomp=1
+WITH LOCAL CHECK OPTION;
+
+--Cual seria el resultado si se ejecutan las siguientes sentencias (en el orden dado),
+--teniendo en cuenta que se ompletan el resto de valores con datos validos:
+
+INSERT INTO parcial_2017_facturas(id_comp,id_tcomp,importe,fecha,...) VALUES (1,3,100,current_date);
+INSERT INTO parcial_2017_facturas(id_comp,id_tcomp,importe,fecha,...) VALUES (1,1,100,current_date);
+INSERT INTO parcial_2017_ultimos_comprobantes(id_comp,id_tcomp,importe,fecha,...) VALUES (1909,3,100,to_date('2015-10-13','YYYY-MM-DD'));
+INSERT INTO parcial_2017_ultimos_comprobantes(id_comp,id_tcomp,importe,fecha,...) VALUES (1,3,100,current_date);
+
+--falla,procede,falla,procede
+--f. Ninguna de las opciones dadas
 
 --EJERCICIO 16
 --########################################################################
@@ -317,8 +364,7 @@ SELECT count(*)
 FROM wireless_comprobante c
 WHERE c.id_tcomp=1
 
---El total de comprobantes que son Facturas generados durantes turnos
-
+--c. El total de comprobantes que son Facturas generados durantes turnos
 
 
 
