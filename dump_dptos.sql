@@ -1,9 +1,75 @@
+-- --
+-- -- unc_248557QL database dump
+-- --
 
+-- -- Dumped from database version 11.5 (Ubuntu 11.5-3.pgdg18.04+1)
+-- -- Dumped by pg_dump version 11.5 (Ubuntu 11.5-3.pgdg18.04+1)
+
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
+
+-- --
+-- -- Name: unc_esq_dptos; Type: SCHEMA; Schema: -; Owner: unc_248557
+-- --
+
+-- CREATE SCHEMA unc_esq_dptos;
+
+
+-- ALTER SCHEMA unc_esq_dptos OWNER TO unc_248557;
+
+-- --
+-- -- Name: SCHEMA unc_esq_dptos; Type: COMMENT; Schema: -; Owner: unc_248557
+-- --
+
+-- COMMENT ON SCHEMA unc_esq_dptos IS 'Esquema de Alquiler de Departamentos';
 
 
 SET default_tablespace = '';
 
 SET default_with_oids = false;
+
+--
+-- Name: pago; Type: TABLE; Schema: unc_esq_dptos; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.dptos_pago (
+    fecha_pago timestamp without time zone NOT NULL,
+    id_reserva integer NOT NULL,
+    id_tipo_pago integer NOT NULL,
+    comentario character varying(80),
+    importe numeric(8,3) NOT NULL
+);
+
+
+ALTER TABLE unc_248557.dptos_pago OWNER TO unc_248557;
+
+--
+-- Name: reserva; Type: TABLE; Schema: unc_esq_dptos; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.dptos_reserva (
+    id_reserva integer NOT NULL,
+    fecha_reserva date NOT NULL,
+    fecha_desde date NOT NULL,
+    fecha_hasta date NOT NULL,
+    tipo_doc character(3) NOT NULL,
+    nro_doc numeric(11,0) NOT NULL,
+    precio_noche numeric(10,2) NOT NULL,
+    precio_limpieza numeric(5,3) NOT NULL,
+    cancelada boolean NOT NULL,
+    tipo_res character(1) NOT NULL
+);
+
+
+ALTER TABLE unc_248557.dptos_reserva OWNER TO unc_248557;
 
 --
 -- Name: ciudad; Type: TABLE; Schema: unc_esq_dptos; Owner: unc_248557
@@ -115,41 +181,6 @@ CREATE TABLE unc_248557.dptos_edo_luego_ocupacion (
 
 
 ALTER TABLE unc_248557.dptos_edo_luego_ocupacion OWNER TO unc_248557;
-
---
--- Name: pago; Type: TABLE; Schema: unc_esq_dptos; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.dptos_pago (
-    fecha_pago timestamp without time zone NOT NULL,
-    id_reserva integer NOT NULL,
-    id_tipo_pago integer NOT NULL,
-    comentario character varying(80),
-    importe numeric(8,3) NOT NULL
-);
-
-
-ALTER TABLE unc_248557.dptos_pago OWNER TO unc_248557;
-
---
--- Name: reserva; Type: TABLE; Schema: unc_esq_dptos; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.dptos_reserva (
-    id_reserva integer NOT NULL,
-    fecha_reserva date NOT NULL,
-    fecha_desde date NOT NULL,
-    fecha_hasta date NOT NULL,
-    tipo_doc character(3) NOT NULL,
-    nro_doc numeric(11,0) NOT NULL,
-    precio_noche numeric(10,2) NOT NULL,
-    precio_limpieza numeric(5,3) NOT NULL,
-    cancelada boolean NOT NULL,
-    tipo_res character(1) NOT NULL
-);
-
-
-ALTER TABLE unc_248557.dptos_reserva OWNER TO unc_248557;
 
 --
 -- Name: estadoreserva; Type: VIEW; Schema: unc_esq_dptos; Owner: unc_248557
@@ -1930,7 +1961,7 @@ INSERT INTO unc_248557.dptos_tipo_pago VALUES (20, 'Aliquet Molestie Tellus Corp
 --
 
 ALTER TABLE ONLY unc_248557.dptos_ciudad
-    ADD constraint dptos_ciudad_pk PRIMARY KEY (cod_ciudad);
+    ADD CONSTRAINT dptos_ciudad_pk PRIMARY KEY (cod_ciudad);
 
 
 --
@@ -1938,7 +1969,7 @@ ALTER TABLE ONLY unc_248557.dptos_ciudad
 --
 
 ALTER TABLE ONLY unc_248557.dptos_costo_hab
-    ADD constraint dptos_costo_hab_pk PRIMARY KEY (id_dpto, id_habitacion, fecha_desde);
+    ADD CONSTRAINT dptos_costo_hab_pk PRIMARY KEY (id_dpto, id_habitacion, fecha_desde);
 
 
 --
@@ -1946,7 +1977,7 @@ ALTER TABLE ONLY unc_248557.dptos_costo_hab
 --
 
 ALTER TABLE ONLY unc_248557.dptos_comentario
-    ADD constraint dptos_pk_comentario PRIMARY KEY (tipo_doc, nro_doc, id_reserva, fecha_hora_comentario);
+    ADD CONSTRAINT dptos_pk_comentario PRIMARY KEY (tipo_doc, nro_doc, id_reserva, fecha_hora_comentario);
 
 
 --
@@ -1954,7 +1985,7 @@ ALTER TABLE ONLY unc_248557.dptos_comentario
 --
 
 ALTER TABLE ONLY unc_248557.dptos_costo_depto
-    ADD constraint dptos_pk_costo_depto PRIMARY KEY (id_dpto, fecha_desde);
+    ADD CONSTRAINT dptos_pk_costo_depto PRIMARY KEY (id_dpto, fecha_desde);
 
 
 --
@@ -1962,7 +1993,7 @@ ALTER TABLE ONLY unc_248557.dptos_costo_depto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_departamento
-    ADD constraint dptos_pk_departamento PRIMARY KEY (id_dpto);
+    ADD CONSTRAINT dptos_pk_departamento PRIMARY KEY (id_dpto);
 
 
 --
@@ -1970,7 +2001,7 @@ ALTER TABLE ONLY unc_248557.dptos_departamento
 --
 
 ALTER TABLE ONLY unc_248557.dptos_edo_luego_ocupacion
-    ADD constraint dptos_pk_edo_luego_ocupacion PRIMARY KEY (id_reserva, fecha);
+    ADD CONSTRAINT dptos_pk_edo_luego_ocupacion PRIMARY KEY (id_reserva, fecha);
 
 
 --
@@ -1978,7 +2009,7 @@ ALTER TABLE ONLY unc_248557.dptos_edo_luego_ocupacion
 --
 
 ALTER TABLE ONLY unc_248557.dptos_habitacion
-    ADD constraint dptos_pk_habitacion PRIMARY KEY (id_dpto, id_habitacion);
+    ADD CONSTRAINT dptos_pk_habitacion PRIMARY KEY (id_dpto, id_habitacion);
 
 
 --
@@ -1986,7 +2017,7 @@ ALTER TABLE ONLY unc_248557.dptos_habitacion
 --
 
 ALTER TABLE ONLY unc_248557.dptos_huesped
-    ADD constraint dptos_pk_huesped PRIMARY KEY (tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_pk_huesped PRIMARY KEY (tipo_doc, nro_doc);
 
 
 --
@@ -1994,7 +2025,7 @@ ALTER TABLE ONLY unc_248557.dptos_huesped
 --
 
 ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
-    ADD constraint dptos_pk_huesped_reserva PRIMARY KEY (tipo_doc, nro_doc, id_reserva);
+    ADD CONSTRAINT dptos_pk_huesped_reserva PRIMARY KEY (tipo_doc, nro_doc, id_reserva);
 
 
 --
@@ -2002,7 +2033,7 @@ ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
 --
 
 ALTER TABLE ONLY unc_248557.dptos_pago
-    ADD constraint dptos_pk_pago PRIMARY KEY (fecha_pago, id_reserva, id_tipo_pago);
+    ADD CONSTRAINT dptos_pk_pago PRIMARY KEY (fecha_pago, id_reserva, id_tipo_pago);
 
 
 --
@@ -2010,7 +2041,7 @@ ALTER TABLE ONLY unc_248557.dptos_pago
 --
 
 ALTER TABLE ONLY unc_248557.dptos_persona
-    ADD constraint dptos_pk_persona PRIMARY KEY (tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_pk_persona PRIMARY KEY (tipo_doc, nro_doc);
 
 
 --
@@ -2018,7 +2049,7 @@ ALTER TABLE ONLY unc_248557.dptos_persona
 --
 
 ALTER TABLE ONLY unc_248557.dptos_propietario
-    ADD constraint dptos_pk_propietario PRIMARY KEY (tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_pk_propietario PRIMARY KEY (tipo_doc, nro_doc);
 
 
 --
@@ -2026,7 +2057,7 @@ ALTER TABLE ONLY unc_248557.dptos_propietario
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva
-    ADD constraint dptos_pk_reseva PRIMARY KEY (id_reserva);
+    ADD CONSTRAINT dptos_pk_reseva PRIMARY KEY (id_reserva);
 
 
 --
@@ -2034,7 +2065,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva
 --
 
 ALTER TABLE ONLY unc_248557.dptos_tipo_dpto
-    ADD constraint dptos_pk_tipo_dpto PRIMARY KEY (id_tipo_depto);
+    ADD CONSTRAINT dptos_pk_tipo_dpto PRIMARY KEY (id_tipo_depto);
 
 
 --
@@ -2042,7 +2073,7 @@ ALTER TABLE ONLY unc_248557.dptos_tipo_dpto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_tipo_pago
-    ADD constraint dptos_pk_tipo_pago PRIMARY KEY (id_tipo_pago);
+    ADD CONSTRAINT dptos_pk_tipo_pago PRIMARY KEY (id_tipo_pago);
 
 
 --
@@ -2050,7 +2081,7 @@ ALTER TABLE ONLY unc_248557.dptos_tipo_pago
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
-    ADD constraint dptos_reserva_dpto_pk PRIMARY KEY (id_reserva);
+    ADD CONSTRAINT dptos_reserva_dpto_pk PRIMARY KEY (id_reserva);
 
 
 --
@@ -2058,7 +2089,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_hab
-    ADD constraint dptos_reserva_hab_pk PRIMARY KEY (id_reserva);
+    ADD CONSTRAINT dptos_reserva_hab_pk PRIMARY KEY (id_reserva);
 
 
 --
@@ -2066,7 +2097,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_hab
 --
 
 ALTER TABLE ONLY unc_248557.dptos_comentario
-    ADD constraint dptos_fk_comentario_huesped_reserva FOREIGN KEY (tipo_doc, nro_doc, id_reserva) REFERENCES unc_248557.dptos_huesped_reserva(tipo_doc, nro_doc, id_reserva);
+    ADD CONSTRAINT dptos_fk_comentario_huesped_reserva FOREIGN KEY (tipo_doc, nro_doc, id_reserva) REFERENCES unc_248557.dptos_huesped_reserva(tipo_doc, nro_doc, id_reserva);
 
 
 --
@@ -2074,7 +2105,7 @@ ALTER TABLE ONLY unc_248557.dptos_comentario
 --
 
 ALTER TABLE ONLY unc_248557.dptos_costo_depto
-    ADD constraint dptos_fk_costo_depto_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
+    ADD CONSTRAINT dptos_fk_costo_depto_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
 
 
 --
@@ -2082,7 +2113,7 @@ ALTER TABLE ONLY unc_248557.dptos_costo_depto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_costo_hab
-    ADD constraint dptos_fk_costo_hab_habitacion FOREIGN KEY (id_dpto, id_habitacion) REFERENCES unc_248557.dptos_habitacion(id_dpto, id_habitacion);
+    ADD CONSTRAINT dptos_fk_costo_hab_habitacion FOREIGN KEY (id_dpto, id_habitacion) REFERENCES unc_248557.dptos_habitacion(id_dpto, id_habitacion);
 
 
 --
@@ -2090,7 +2121,7 @@ ALTER TABLE ONLY unc_248557.dptos_costo_hab
 --
 
 ALTER TABLE ONLY unc_248557.dptos_departamento
-    ADD constraint dptos_fk_departamento_ciudad FOREIGN KEY (cod_ciudad) REFERENCES unc_248557.dptos_ciudad(cod_ciudad);
+    ADD CONSTRAINT dptos_fk_departamento_ciudad FOREIGN KEY (cod_ciudad) REFERENCES unc_248557.dptos_ciudad(cod_ciudad);
 
 
 --
@@ -2098,7 +2129,7 @@ ALTER TABLE ONLY unc_248557.dptos_departamento
 --
 
 ALTER TABLE ONLY unc_248557.dptos_departamento
-    ADD constraint dptos_fk_departamento_propietario FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_propietario(tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_fk_departamento_propietario FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_propietario(tipo_doc, nro_doc);
 
 
 --
@@ -2106,7 +2137,7 @@ ALTER TABLE ONLY unc_248557.dptos_departamento
 --
 
 ALTER TABLE ONLY unc_248557.dptos_departamento
-    ADD constraint dptos_fk_departamento_tipo_dpto FOREIGN KEY (id_tipo_depto) REFERENCES unc_248557.dptos_tipo_dpto(id_tipo_depto);
+    ADD CONSTRAINT dptos_fk_departamento_tipo_dpto FOREIGN KEY (id_tipo_depto) REFERENCES unc_248557.dptos_tipo_dpto(id_tipo_depto);
 
 
 --
@@ -2114,7 +2145,7 @@ ALTER TABLE ONLY unc_248557.dptos_departamento
 --
 
 ALTER TABLE ONLY unc_248557.dptos_edo_luego_ocupacion
-    ADD constraint dptos_fk_edo_luego_ocupacion_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
+    ADD CONSTRAINT dptos_fk_edo_luego_ocupacion_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
 
 
 --
@@ -2122,7 +2153,7 @@ ALTER TABLE ONLY unc_248557.dptos_edo_luego_ocupacion
 --
 
 ALTER TABLE ONLY unc_248557.dptos_habitacion
-    ADD constraint dptos_fk_habitacion_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
+    ADD CONSTRAINT dptos_fk_habitacion_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
 
 
 --
@@ -2130,7 +2161,7 @@ ALTER TABLE ONLY unc_248557.dptos_habitacion
 --
 
 ALTER TABLE ONLY unc_248557.dptos_huesped
-    ADD constraint dptos_fk_huesped_persona FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_persona(tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_fk_huesped_persona FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_persona(tipo_doc, nro_doc);
 
 
 --
@@ -2138,7 +2169,7 @@ ALTER TABLE ONLY unc_248557.dptos_huesped
 --
 
 ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
-    ADD constraint dptos_fk_huesped_reserva_huesped FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_huesped(tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_fk_huesped_reserva_huesped FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_huesped(tipo_doc, nro_doc);
 
 
 --
@@ -2146,7 +2177,7 @@ ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
 --
 
 ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
-    ADD constraint dptos_fk_huesped_reserva_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
+    ADD CONSTRAINT dptos_fk_huesped_reserva_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
 
 
 --
@@ -2154,7 +2185,7 @@ ALTER TABLE ONLY unc_248557.dptos_huesped_reserva
 --
 
 ALTER TABLE ONLY unc_248557.dptos_pago
-    ADD constraint dptos_fk_pago_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
+    ADD CONSTRAINT dptos_fk_pago_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
 
 
 --
@@ -2162,7 +2193,7 @@ ALTER TABLE ONLY unc_248557.dptos_pago
 --
 
 ALTER TABLE ONLY unc_248557.dptos_pago
-    ADD constraint dptos_fk_pago_tipo_pago FOREIGN KEY (id_tipo_pago) REFERENCES unc_248557.dptos_tipo_pago(id_tipo_pago);
+    ADD CONSTRAINT dptos_fk_pago_tipo_pago FOREIGN KEY (id_tipo_pago) REFERENCES unc_248557.dptos_tipo_pago(id_tipo_pago);
 
 
 --
@@ -2170,7 +2201,7 @@ ALTER TABLE ONLY unc_248557.dptos_pago
 --
 
 ALTER TABLE ONLY unc_248557.dptos_propietario
-    ADD constraint dptos_fk_propietario_persona FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_persona(tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_fk_propietario_persona FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_persona(tipo_doc, nro_doc);
 
 
 --
@@ -2178,7 +2209,7 @@ ALTER TABLE ONLY unc_248557.dptos_propietario
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
-    ADD constraint dptos_fk_reserva_dpto_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
+    ADD CONSTRAINT dptos_fk_reserva_dpto_departamento FOREIGN KEY (id_dpto) REFERENCES unc_248557.dptos_departamento(id_dpto);
 
 
 --
@@ -2186,7 +2217,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
-    ADD constraint dptos_fk_reserva_dpto_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
+    ADD CONSTRAINT dptos_fk_reserva_dpto_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
 
 
 --
@@ -2194,7 +2225,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_dpto
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_hab
-    ADD constraint dptos_fk_reserva_hab_habitacion FOREIGN KEY (id_dpto, id_habitacion) REFERENCES unc_248557.dptos_habitacion(id_dpto, id_habitacion);
+    ADD CONSTRAINT dptos_fk_reserva_hab_habitacion FOREIGN KEY (id_dpto, id_habitacion) REFERENCES unc_248557.dptos_habitacion(id_dpto, id_habitacion);
 
 
 --
@@ -2202,7 +2233,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_hab
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva_hab
-    ADD constraint dptos_fk_reserva_hab_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
+    ADD CONSTRAINT dptos_fk_reserva_hab_reserva FOREIGN KEY (id_reserva) REFERENCES unc_248557.dptos_reserva(id_reserva);
 
 
 --
@@ -2210,7 +2241,7 @@ ALTER TABLE ONLY unc_248557.dptos_reserva_hab
 --
 
 ALTER TABLE ONLY unc_248557.dptos_reserva
-    ADD constraint dptos_fk_reserva_huesped FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_huesped(tipo_doc, nro_doc);
+    ADD CONSTRAINT dptos_fk_reserva_huesped FOREIGN KEY (tipo_doc, nro_doc) REFERENCES unc_248557.dptos_huesped(tipo_doc, nro_doc);
 
 
 --
@@ -2220,6 +2251,22 @@ ALTER TABLE ONLY unc_248557.dptos_reserva
 GRANT USAGE ON SCHEMA unc_esq_dptos TO PUBLIC;
 GRANT ALL ON SCHEMA unc_esq_dptos TO unc_staff;
 GRANT USAGE ON SCHEMA unc_esq_dptos TO unc_alumnos;
+
+
+--
+-- Name: TABLE pago; Type: ACL; Schema: unc_esq_dptos; Owner: unc_248557
+--
+
+GRANT ALL ON TABLE unc_248557.dptos_pago TO unc_staff;
+GRANT SELECT ON TABLE unc_248557.dptos_pago TO PUBLIC;
+
+
+--
+-- Name: TABLE reserva; Type: ACL; Schema: unc_esq_dptos; Owner: unc_248557
+--
+
+GRANT ALL ON TABLE unc_248557.dptos_reserva TO unc_staff;
+GRANT SELECT ON TABLE unc_248557.dptos_reserva TO PUBLIC;
 
 
 --
@@ -2276,22 +2323,6 @@ GRANT SELECT ON TABLE unc_248557.dptos_departamentoamplio TO PUBLIC;
 
 GRANT ALL ON TABLE unc_248557.dptos_edo_luego_ocupacion TO unc_staff;
 GRANT SELECT ON TABLE unc_248557.dptos_edo_luego_ocupacion TO PUBLIC;
-
-
---
--- Name: TABLE pago; Type: ACL; Schema: unc_esq_dptos; Owner: unc_248557
---
-
-GRANT ALL ON TABLE unc_248557.dptos_pago TO unc_staff;
-GRANT SELECT ON TABLE unc_248557.dptos_pago TO PUBLIC;
-
-
---
--- Name: TABLE reserva; Type: ACL; Schema: unc_esq_dptos; Owner: unc_248557
---
-
-GRANT ALL ON TABLE unc_248557.dptos_reserva TO unc_staff;
-GRANT SELECT ON TABLE unc_248557.dptos_reserva TO PUBLIC;
 
 
 --

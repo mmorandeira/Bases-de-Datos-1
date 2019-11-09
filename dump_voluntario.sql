@@ -1,30 +1,35 @@
---
--- PostgreSQL database dump
---
+-- --
+-- -- unc_248557QL database dump
+-- --
 
--- Dumped from database version 11.5 (Ubuntu 11.5-1.pgdg18.04+1)
--- Dumped by pg_dump version 11.5 (Ubuntu 11.5-1.pgdg18.04+1)
+-- -- Dumped from database version 11.5 (Ubuntu 11.5-3.pgdg18.04+1)
+-- -- Dumped by pg_dump version 11.5 (Ubuntu 11.5-3.pgdg18.04+1)
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+-- SET statement_timeout = 0;
+-- SET lock_timeout = 0;
+-- SET idle_in_transaction_session_timeout = 0;
+-- SET client_encoding = 'UTF8';
+-- SET standard_conforming_strings = on;
+-- SELECT pg_catalog.set_config('search_path', '', false);
+-- SET check_function_bodies = false;
+-- SET xmloption = content;
+-- SET client_min_messages = warning;
+-- SET row_security = off;
 
---
--- Name: unc_248557; Type: SCHEMA; Schema: -; Owner: unc_248557
---
+-- --
+-- -- Name: unc_esq_voluntario; Type: SCHEMA; Schema: -; Owner: unc_248557
+-- --
 
---
--- Name: SCHEMA unc_248557; Type: COMMENT; Schema: -; Owner: unc_248557
---
+-- CREATE SCHEMA unc_esq_voluntario;
 
---COMMENT ON SCHEMA unc_248557 IS 'Esquema de Voluntarios de la Cátedra';
+
+-- ALTER SCHEMA unc_esq_voluntario OWNER TO unc_248557;
+
+-- --
+-- -- Name: SCHEMA unc_esq_voluntario; Type: COMMENT; Schema: -; Owner: unc_248557
+-- --
+
+-- COMMENT ON SCHEMA unc_esq_voluntario IS 'Esquema de Voluntarios de la Cátedra';
 
 
 SET default_tablespace = '';
@@ -32,98 +37,7 @@ SET default_tablespace = '';
 SET default_with_oids = true;
 
 --
--- Name: continente; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_continente (
-    nombre_continente character varying(25),
-    id_continente numeric NOT NULL
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_continente OWNER TO unc_248557;
-
---
--- Name: direccion; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_direccion (
-    calle character varying(40),
-    codigo_postal character varying(12),
-    ciudad character varying(30) NOT NULL,
-    provincia character varying(25),
-    id_pais character(2) NOT NULL,
-    id_direccion numeric(4,0) NOT NULL
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_direccion OWNER TO unc_248557;
-
---
--- Name: historico; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_historico (
-    fecha_inicio date NOT NULL,
-    nro_voluntario numeric(6,0) NOT NULL,
-    fecha_fin date NOT NULL,
-    id_tarea character varying(10) NOT NULL,
-    id_institucion numeric(4,0),
-    CONSTRAINT voluntario_historico_check CHECK ((fecha_fin > fecha_inicio))
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_historico OWNER TO unc_248557;
-
---
--- Name: institucion; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_institucion (
-    nombre_institucion character varying(60) NOT NULL,
-    id_director numeric(6,0),
-    id_direccion numeric(4,0),
-    id_institucion numeric(4,0) NOT NULL
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_institucion OWNER TO unc_248557;
-
---
--- Name: pais; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_pais (
-    nombre_pais character varying(40),
-    id_continente numeric NOT NULL,
-    id_pais character(2) NOT NULL
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_pais OWNER TO unc_248557;
-
---
--- Name: tarea; Type: TABLE; Schema: unc_248557; Owner: unc_248557
---
-
-CREATE TABLE unc_248557.voluntario_tarea (
-    nombre_tarea character varying(40) NOT NULL,
-    min_horas numeric(6,0),
-    id_tarea character varying(10) NOT NULL,
-    max_horas numeric(6,0)
-)
-WITH (autovacuum_enabled='true');
-
-
-ALTER TABLE unc_248557.voluntario_tarea OWNER TO unc_248557;
-
---
--- Name: voluntario; Type: TABLE; Schema: unc_248557; Owner: unc_248557
+-- Name: voluntario; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 CREATE TABLE unc_248557.voluntario_voluntario (
@@ -147,7 +61,98 @@ WITH (autovacuum_enabled='true');
 ALTER TABLE unc_248557.voluntario_voluntario OWNER TO unc_248557;
 
 --
--- Data for Name: continente; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Name: tarea; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_tarea (
+    nombre_tarea character varying(40) NOT NULL,
+    min_horas numeric(6,0),
+    id_tarea character varying(10) NOT NULL,
+    max_horas numeric(6,0)
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_tarea OWNER TO unc_248557;
+
+--
+-- Name: continente; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_continente (
+    nombre_continente character varying(25),
+    id_continente numeric NOT NULL
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_continente OWNER TO unc_248557;
+
+--
+-- Name: direccion; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_direccion (
+    calle character varying(40),
+    codigo_postal character varying(12),
+    ciudad character varying(30) NOT NULL,
+    provincia character varying(25),
+    id_pais character(2) NOT NULL,
+    id_direccion numeric(4,0) NOT NULL
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_direccion OWNER TO unc_248557;
+
+--
+-- Name: historico; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_historico (
+    fecha_inicio date NOT NULL,
+    nro_voluntario numeric(6,0) NOT NULL,
+    fecha_fin date NOT NULL,
+    id_tarea character varying(10) NOT NULL,
+    id_institucion numeric(4,0),
+    CONSTRAINT voluntario_historico_check CHECK ((fecha_fin > fecha_inicio))
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_historico OWNER TO unc_248557;
+
+--
+-- Name: institucion; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_institucion (
+    nombre_institucion character varying(60) NOT NULL,
+    id_director numeric(6,0),
+    id_direccion numeric(4,0),
+    id_institucion numeric(4,0) NOT NULL
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_institucion OWNER TO unc_248557;
+
+--
+-- Name: pais; Type: TABLE; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+CREATE TABLE unc_248557.voluntario_pais (
+    nombre_pais character varying(40),
+    id_continente numeric NOT NULL,
+    id_pais character(2) NOT NULL
+)
+WITH (autovacuum_enabled='true');
+
+
+ALTER TABLE unc_248557.voluntario_pais OWNER TO unc_248557;
+
+--
+-- Data for Name: continente; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_continente VALUES ('Europeo', 1);
@@ -159,7 +164,7 @@ INSERT INTO unc_248557.voluntario_continente VALUES ('Oceania', 6);
 
 
 --
--- Data for Name: direccion; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: direccion; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_direccion VALUES ('1297 Via Cola di Rie', '00989', 'Roma', NULL, 'IT', 1000);
@@ -188,7 +193,7 @@ INSERT INTO unc_248557.voluntario_direccion VALUES ('Mariano Escobedo 9991', '11
 
 
 --
--- Data for Name: historico; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: historico; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_historico VALUES ('1993-01-13', 102, '1998-07-24', 'IT_PROG', 60);
@@ -205,7 +210,7 @@ INSERT INTO unc_248557.voluntario_historico VALUES ('1970-01-06', 176, '2019-08-
 
 
 --
--- Data for Name: institucion; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: institucion; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_institucion VALUES ('CASA DE LA PROVIDENCIA', 200, 1700, 10);
@@ -238,7 +243,7 @@ INSERT INTO unc_248557.voluntario_institucion VALUES ('FUNDACION VIDA', NULL, 17
 
 
 --
--- Data for Name: pais; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: pais; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_pais VALUES ('Italia', 1, 'IT');
@@ -269,7 +274,7 @@ INSERT INTO unc_248557.voluntario_pais VALUES ('Belgica', 1, 'BE');
 
 
 --
--- Data for Name: tarea; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: tarea; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_tarea VALUES ('PROMOCION', 20000, 'AD_PRES', 40000);
@@ -295,7 +300,7 @@ INSERT INTO unc_248557.voluntario_tarea VALUES ('Nueva Tarea', 100, 'OT_NEW', 30
 
 
 --
--- Data for Name: voluntario; Type: TABLE DATA; Schema: unc_248557; Owner: unc_248557
+-- Data for Name: voluntario; Type: TABLE DATA; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 INSERT INTO unc_248557.voluntario_voluntario VALUES ('Michael', 'Rogers', 'MRogers@OUTLOOK.COM', '+41 643 165 6647', '1998-08-26', 'ST_CLERK', 134, 2900.00, NULL, 50, 122);
@@ -408,7 +413,7 @@ INSERT INTO unc_248557.voluntario_voluntario VALUES ('William', 'Gietz', 'WGietz
 
 
 --
--- Name: continente pk_continente; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: continente pk_continente; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_continente
@@ -416,7 +421,7 @@ ALTER TABLE ONLY unc_248557.voluntario_continente
 
 
 --
--- Name: direccion pk_direccion; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: direccion pk_direccion; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_direccion
@@ -424,7 +429,7 @@ ALTER TABLE ONLY unc_248557.voluntario_direccion
 
 
 --
--- Name: historico pk_historico; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: historico pk_historico; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_historico
@@ -432,7 +437,7 @@ ALTER TABLE ONLY unc_248557.voluntario_historico
 
 
 --
--- Name: institucion pk_institucion; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: institucion pk_institucion; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_institucion
@@ -440,7 +445,7 @@ ALTER TABLE ONLY unc_248557.voluntario_institucion
 
 
 --
--- Name: pais pk_pais; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: pais pk_pais; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_pais
@@ -448,7 +453,7 @@ ALTER TABLE ONLY unc_248557.voluntario_pais
 
 
 --
--- Name: tarea pk_tarea; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: tarea pk_tarea; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_tarea
@@ -456,7 +461,7 @@ ALTER TABLE ONLY unc_248557.voluntario_tarea
 
 
 --
--- Name: voluntario pk_voluntario; Type: CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: voluntario pk_voluntario; Type: CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_voluntario
@@ -464,14 +469,14 @@ ALTER TABLE ONLY unc_248557.voluntario_voluntario
 
 
 --
--- Name: emp_email_uk; Type: INDEX; Schema: unc_248557; Owner: unc_248557
+-- Name: emp_email_uk; Type: INDEX; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 CREATE UNIQUE INDEX emp_email_uk ON unc_248557.voluntario_voluntario USING btree (e_mail);
 
 
 --
--- Name: pais fk_continente; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: pais fk_continente; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_pais
@@ -479,7 +484,7 @@ ALTER TABLE ONLY unc_248557.voluntario_pais
 
 
 --
--- Name: voluntario fk_coordinador; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: voluntario fk_coordinador; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_voluntario
@@ -487,7 +492,7 @@ ALTER TABLE ONLY unc_248557.voluntario_voluntario
 
 
 --
--- Name: institucion fk_direccion; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: institucion fk_direccion; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_institucion
@@ -495,7 +500,7 @@ ALTER TABLE ONLY unc_248557.voluntario_institucion
 
 
 --
--- Name: institucion fk_director; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: institucion fk_director; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_institucion
@@ -503,7 +508,7 @@ ALTER TABLE ONLY unc_248557.voluntario_institucion
 
 
 --
--- Name: historico fk_institucion_h; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: historico fk_institucion_h; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_historico
@@ -511,7 +516,7 @@ ALTER TABLE ONLY unc_248557.voluntario_historico
 
 
 --
--- Name: voluntario fk_institucion_v; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: voluntario fk_institucion_v; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_voluntario
@@ -519,7 +524,7 @@ ALTER TABLE ONLY unc_248557.voluntario_voluntario
 
 
 --
--- Name: direccion fk_pais; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: direccion fk_pais; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_direccion
@@ -527,7 +532,7 @@ ALTER TABLE ONLY unc_248557.voluntario_direccion
 
 
 --
--- Name: historico fk_tarea_h; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: historico fk_tarea_h; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_historico
@@ -535,7 +540,7 @@ ALTER TABLE ONLY unc_248557.voluntario_historico
 
 
 --
--- Name: voluntario fk_tarea_v; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: voluntario fk_tarea_v; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_voluntario
@@ -543,7 +548,7 @@ ALTER TABLE ONLY unc_248557.voluntario_voluntario
 
 
 --
--- Name: historico fk_voluntario_h; Type: FK CONSTRAINT; Schema: unc_248557; Owner: unc_248557
+-- Name: historico fk_voluntario_h; Type: FK CONSTRAINT; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 ALTER TABLE ONLY unc_248557.voluntario_historico
@@ -551,62 +556,62 @@ ALTER TABLE ONLY unc_248557.voluntario_historico
 
 
 --
--- Name: SCHEMA unc_248557; Type: ACL; Schema: -; Owner: unc_248557
+-- Name: SCHEMA unc_esq_voluntario; Type: ACL; Schema: -; Owner: unc_248557
 --
 
-GRANT USAGE ON SCHEMA unc_248557 TO PUBLIC;
-
-
---
--- Name: TABLE continente; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_continente TO PUBLIC;
+GRANT USAGE ON SCHEMA unc_esq_voluntario TO PUBLIC;
 
 
 --
--- Name: TABLE direccion; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_direccion TO PUBLIC;
-
-
---
--- Name: TABLE historico; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_historico TO PUBLIC;
-
-
---
--- Name: TABLE institucion; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_institucion TO PUBLIC;
-
-
---
--- Name: TABLE pais; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_pais TO PUBLIC;
-
-
---
--- Name: TABLE tarea; Type: ACL; Schema: unc_248557; Owner: unc_248557
---
-
-GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_tarea TO PUBLIC;
-
-
---
--- Name: TABLE voluntario; Type: ACL; Schema: unc_248557; Owner: unc_248557
+-- Name: TABLE voluntario; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
 --
 
 GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_voluntario TO PUBLIC;
 
 
 --
--- PostgreSQL database dump complete
+-- Name: TABLE tarea; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_tarea TO PUBLIC;
+
+
+--
+-- Name: TABLE continente; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_continente TO PUBLIC;
+
+
+--
+-- Name: TABLE direccion; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_direccion TO PUBLIC;
+
+
+--
+-- Name: TABLE historico; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_historico TO PUBLIC;
+
+
+--
+-- Name: TABLE institucion; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_institucion TO PUBLIC;
+
+
+--
+-- Name: TABLE pais; Type: ACL; Schema: unc_esq_voluntario; Owner: unc_248557
+--
+
+GRANT SELECT,REFERENCES ON TABLE unc_248557.voluntario_pais TO PUBLIC;
+
+
+--
+-- unc_248557QL database dump complete
 --
 
