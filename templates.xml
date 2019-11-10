@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="sql" deleted="false" description="" enabled="true" name="as">INSERT INTO g06_${empleado}
-SELECT * FROM unc_tpe2019.${empleado}</template><template autoinsert="true" context="sql" deleted="false" description="Creates a trigger function." enabled="true" name="createfn">CREATE OR REPLACE FUNCTION ${fn_name}()
+SELECT * FROM unc_tpe2019.${empleado}</template><template autoinsert="true" context="sql" deleted="false" description="Create Check table SQL standar." enabled="true" name="checktb">ALTER TABLE ${table} ADD CONSTRAINT CK_${name}
+CHECK (NOT EXISTS (SELECT 1 FROM ${table}))
+;</template><template autoinsert="true" context="sql" deleted="false" description="Create an assertion." enabled="true" name="createass">CREATE ASSERTION AS_${name}
+CHECK (NOT EXISTS (	SELECT 1
+					FROM ${table})
+
+);</template><template autoinsert="true" context="sql" deleted="false" description="Create domain." enabled="true" name="createdm">CREATE DOMAIN ${name} AS ${type} NOT NULL
+CHECK (VALUES IN (${att1}))
+;</template><template autoinsert="true" context="sql" deleted="false" description="Creates a trigger function." enabled="true" name="createfn">CREATE OR REPLACE FUNCTION FN_${name}()
 RETURNS TRIGGER AS
 ${dollar}BODY${dollar}
 BEGIN
@@ -27,10 +35,10 @@ ${dollar}BODY${dollar};
 </template><template autoinsert="true" context="sql" deleted="false" description="Create table with primary key." enabled="true" name="createtb">CREATE TABLE ${name} (
 	${pk_name} ${pk_type} NOT NULL,
 	CONSTRAINT PK_${name} PRIMARY KEY(${pk_name})
-);</template><template autoinsert="true" context="sql" deleted="false" description="Create trigger." enabled="true" name="createtr">CREATE TRIGGER ${tr_name}
+);</template><template autoinsert="true" context="sql" deleted="false" description="Create trigger." enabled="true" name="createtr">CREATE TRIGGER TR_${name}
 ${when} ${event} ON ${table_name}
 ${granularity}
-EXECUTE PROCEDURE ${fn_name}();</template><template autoinsert="true" context="sql" deleted="false" description="Create a view." enabled="true" name="createvw">CREATE VIEW ${view_name} AS
+EXECUTE PROCEDURE FN_${fn_name}();</template><template autoinsert="true" context="sql" deleted="false" description="Create a view." enabled="true" name="createvw">CREATE VIEW ${view_name} AS
 	SELECT *
 	FROM ${table_name}
 ;</template><template autoinsert="true" context="sql" deleted="false" description="Alter table add foreign key." enabled="true" name="fk">ALTER TABLE ${table}
