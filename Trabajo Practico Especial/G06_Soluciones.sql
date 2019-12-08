@@ -1,5 +1,4 @@
 
-
 --SERVICIO B1.2
 --########################################################################
 
@@ -7,32 +6,32 @@
 --Un movimiento de salida debe referenciar, en orden cronologico, al ultimo 
 --movimiento interno, si los tuviera, o al movimiento de entrada (respecto del mismo pallet).
 
-ALTER TABLE G06_MOVIMIENTO ADD CONSTRAINT CK_G06_MOV_ANTERIOR_NO_CONSISTENTE
+		--no queremos que exista un movimiento de salida
+		--cuyo movimiento anterior no sea el movimiento 
+		--(entrada o interno) mas reciente del mismo pallet
+	    --se los ordena decendientemente para que quede el 
+	    --mas reciente primero
+ALTER TABLE g06_movimiento ADD CONSTRAINT CK_G06_MOV_ANTERIOR_NO_CONSISTENTE
 CHECK (
-		--no queresmos que exista un movimiento de salida
 		NOT EXISTS (SELECT 1 
-					FROM G06_MOVIMsIENTO m
-					WHERE tipo = 'S'
-					--cuyo movimiento anterior no sea el movimiento 
-					--(entrada o interno) más reciente del mismo pallet
-				    --se los ordena decendientemente para que quede el 
-				    --mas reciente primero
+					FROM g06_movimiento m
+					WHERE tipo = 'S'	
 					AND (id_mov_ant <> (SELECT id_movimiento
-									    FROM G06_MOVIMIENTO
+									    FROM g06_movimiento
 									    WHERE tipo <> 'S' AND cod_pallet = m.cod_pallet 
 									    ORDER BY fecha DESC 
 									    LIMIT 1)
 					--cuyo fecha no sea mayor a su movimiento anterior
 							OR fecha <= (SELECT fecha 
-									  	 FROM G06_MOVIMIENTO
+									  	 FROM g06_movimiento
 				 					  	 WHERE id_movimiento = m.id_mov_ant)))
 		AND 
 		--ademas se comprueba que no haya mas de un movimiento de salida por pallet
 		NOT EXISTS (SELECT 1 
-					FROM G06_MOVIMIENTO
-					WHERE tipo = 'S'
-					GROUP BY cod_pallet
-					HAVING count(*) > 1))
+						FROM g06_movimiento
+						WHERE tipo = 'S'
+						GROUP BY cod_pallet
+						HAVING count(*) > 1))
 ;
 
 
@@ -45,7 +44,8 @@ CHECK (
 */
 
 
-CREATE OR REPLACE FUNCTION TRFN_G06_MOV_ANTERIOR_NO_CONSISTENTE() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION TRFN_G06_MOV_ANTERIOR_NO_CONSISTENTE()
+RETURNS TRIGGER AS
 $BODY$
 DECLARE 
 	_ultimo_mov record;
@@ -53,11 +53,11 @@ BEGIN
 	--primero se verifica si el pallet ya tiene un movimiento de salida
 	--esto se controla solo cuando se hace un insert o no se cambia de pallet
 	
-	IF(TG_OP='INSERT' OR NEW.cod_pallet<>OLD.cod_pallet) THEN 
+	IF(TG_OP = 'INSERT' OR NEW.cod_pallet <> OLD.cod_pallet) THEN 
 		IF(EXISTS (
 				SELECT 0
-				FROM G06_MOVIMIENTO
-				WHERE cod_pallet=NEW.cod_pallet AND tipo='S'
+				FROM g06_movimiento
+				WHERE cod_pallet = NEW.cod_pallet AND tipo = 'S'
 			)
 		) THEN
 			RAISE EXCEPTION 'Ya existe un movimiento de salida para este pallet';
@@ -67,21 +67,21 @@ BEGIN
 	--ahora obtenemos el ultimo movimiento del pallet
 	
 	SELECT * INTO _ultimo_mov
-	FROM G06_MOVIMIENTO
-	WHERE cod_pallet=NEW.cod_pallet
+	FROM g06_movimiento
+	WHERE cod_pallet = NEW.cod_pallet
 	ORDER BY fecha DESC
 	LIMIT 1;
 	
 	--comparamos si el ultimo movimiento coincide con el que se ingreso
 	
-	IF(_ultimo_mov.id_movimiento<>NEW.id_mov_ant) THEN
+	IF(_ultimo_mov.id_movimiento <> NEW.id_mov_ant) THEN
 		RAISE EXCEPTION 'El movimiento anterior no es el mas reciente del pallet';
 	END IF;
 	
 	--finalmente se comprueba que el ultimo de todos los movimiento (cronologicamente)
 	--sea el de salida
 	
-	IF (_ultimo_mov.fecha>=NEW.fecha) THEN
+	IF (_ultimo_mov.fecha >= NEW.fecha) THEN
 		RAISE EXCEPTION 'El ultimo movimiento (cronologicamente) debe ser de salida';
 	END IF;
 	RETURN NEW;
@@ -89,22 +89,22 @@ END
 $BODY$
 LANGUAGE 'plpgsql';
 
-CREATE TRIGGER TR_G06_INSERT_MOV_ANTERIOR_NO_CONSISTENTE
-BEFORE INSERT ON G06_MOVIMIENTO
+CREATE TRIGGER TR_G06_MOV_ANTERIOR_NO_CONSISTENTE_INSERT
+BEFORE INSERT ON g06_movimiento
 FOR EACH ROW
-WHEN (NEW.tipo='S')
+WHEN (NEW.tipo ='S')
 EXECUTE PROCEDURE TRFN_G06_MOV_ANTERIOR_NO_CONSISTENTE();
 
-CREATE TRIGGER TR_G06_UPDATE_MOV_ANTERIOR_NO_CONSISTENTE
-BEFORE UPDATE OF id_mov_ant,fecha,cod_pallet ON G06_MOVIMIENTO
+CREATE TRIGGER TR_G06_MOV_ANTERIOR_NO_CONSISTENTE_UPDATE
+BEFORE UPDATE OF id_mov_ant,fecha,cod_pallet ON g06_movimiento
 FOR EACH ROW
-WHEN (OLD.tipo='S')
+WHEN (OLD.tipo ='S')
 EXECUTE PROCEDURE TRFN_G06_MOV_ANTERIOR_NO_CONSISTENTE();
 
 --sentencias que promueven la activacion de la restriccion
 --INSERCION DE VALORES CONSISTENTES PARA REALIZAR PRUEBAS
-
-INSERT INTO G06_MOVIMIENTO (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+/*
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
 VALUES
 	--movimientos de un mismo pallet sin salida
 	(1, to_timestamp('01/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS'), 'E', NULL, 3, 'DNI', 3206411, '00739448'),
@@ -119,98 +119,141 @@ VALUES
 ;
 
 --eliminacion de valores cargados
-DELETE FROM G06_MOVIMIENTO WHERE id_movimiento BETWEEN 1 AND 9;
+DELETE FROM g06_movimiento WHERE id_movimiento BETWEEN 1 AND 9;
 
 --INSERTS Y UPDATES DE VALORES PARA REALIZAR PRUEBAS
 
 --un nuevo movimiento cuyo movimiento anterior no es el mas reciente
-INSERT INTO G06_MOVIMIENTO (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
 VALUES (5, to_timestamp('05/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS'), 'S', 3, 57, 'DNI', 3206411, '00739448');
 
 --un nuevo movimiento de salida con fecha menor al movimiento anterior
-INSERT INTO G06_MOVIMIENTO (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
 VALUES (5, to_timestamp('03/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS'), 'S', 4, 57, 'DNI', 3206411, '00739448');
 
 --un nuevo movimiento de salida para un pallet que ya tiene movimiento de salida
-INSERT INTO G06_MOVIMIENTO (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
 VALUES (10, to_timestamp('10/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS'), 'S', 8, 57, 'DNI', 3206411, '02596499');
 
 --un nuevo movimiento de salida con datos que no generan inconsistencia
-INSERT INTO G06_MOVIMIENTO (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
+INSERT INTO g06_movimiento (id_movimiento,fecha,tipo,id_mov_ant,id_pos,tipo_doc,nro_doc,cod_pallet)
 VALUES (5, to_timestamp('05/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS'), 'S', 4, 57, 'DNI', 3206411, '00739448');
 
 --borrado de tuplas que se insertaron para las pruebas
-DELETE FROM G06_MOVIMIENTO WHERE id_movimiento=5;
-DELETE FROM G06_MOVIMIENTO WHERE id_movimiento=10;
+DELETE FROM g06_movimiento WHERE id_movimiento=5;
+DELETE FROM g06_movimiento WHERE id_movimiento=10;
 
 --updates
 
 --se cambia el movimiento anterior a uno que no es el mas reciente
-UPDATE G06_MOVIMIENTO SET id_mov_ant=7 WHERE id_movimiento=9;
+UPDATE g06_movimiento SET id_mov_ant=7 WHERE id_movimiento=9;
 --se restaura
-UPDATE G06_MOVIMIENTO SET id_mov_ant=8 WHERE id_movimiento=9; 
+UPDATE g06_movimiento SET id_mov_ant=8 WHERE id_movimiento=9; 
 
 --se cambia la fecha del movimiento de salida a una fecha previa a la del 
 --movimiento anterior
-UPDATE G06_MOVIMIENTO SET fecha=to_timestamp('07/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS') WHERE id_movimiento=9;
+UPDATE g06_movimiento SET fecha=to_timestamp('07/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS') WHERE id_movimiento=9;
 --se restaura
-UPDATE G06_MOVIMIENTO SET fecha=to_timestamp('09/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS') WHERE id_movimiento=9; 
+UPDATE g06_movimiento SET fecha=to_timestamp('09/11/2019/00/00/00','DD/MM/YYYY/HH24/MI/SS') WHERE id_movimiento=9; 
 
 --se cambia el pallet de un movimiento de salida por lo que el movimiento 
 --anterior no deberia ser el correcto
-UPDATE G06_MOVIMIENTO SET cod_pallet='00739448' WHERE id_movimiento=9;
+UPDATE g06_movimiento SET cod_pallet='00739448' WHERE id_movimiento=9;
 --se restaura
-UPDATE G06_MOVIMIENTO SET cod_pallet='02596499' WHERE id_movimiento=9; 
+UPDATE g06_movimiento SET cod_pallet='02596499' WHERE id_movimiento=9; 
 
 --se cambia el pallet pero se agrega el movimiento anterior correspondiente (no se generan inconsistencias)
-UPDATE G06_MOVIMIENTO SET cod_pallet='00739448',id_mov_ant=4 WHERE id_movimiento=9;
-UPDATE G06_MOVIMIENTO SET cod_pallet='02596499',id_mov_ant=8 WHERE id_movimiento=9;
-
+UPDATE g06_movimiento SET cod_pallet='00739448',id_mov_ant=4 WHERE id_movimiento=9;
+UPDATE g06_movimiento SET cod_pallet='02596499',id_mov_ant=8 WHERE id_movimiento=9;
+*/
 
 --SERVICIO B2.1
 --########################################################################
 
+DELETE FROM g06_linea_alquiler WHERE id_liquidacion = 14;
 
---Mantener actualizado automaticamente el saldo de cada cliente
-
-CREATE OR REPLACE FUNCTION TRFN_G06_ACTUALIZAR_SALDO() RETURNS TRIGGER AS
+CREATE OR REPLACE FUNCTION TRFN_G06_ACTUALIZAR_SALDO() 
+RETURNS TRIGGER AS
 $BODY$
 BEGIN 
 	IF (TG_OP='INSERT') THEN
-		UPDATE g06_cliente SET saldo=saldo+NEW.importe WHERE cuit_cuil=NEW.cuit_cuil;
+		UPDATE g06_cliente SET saldo = saldo + NEW.importe WHERE cuit_cuil = NEW.cuit_cuil;
 	END IF;
 	IF (TG_OP='UPDATE') THEN
-		UPDATE g06_cliente SET saldo=saldo-OLD.importe WHERE cuit_cuil=OLD.cuit_cuil;
-		UPDATE g06_cliente SET saldo=saldo+NEW.importe WHERE cuit_cuil=NEW.cuit_cuil;
+		UPDATE g06_cliente SET saldo = saldo - OLD.importe WHERE cuit_cuil = OLD.cuit_cuil;
+		UPDATE g06_cliente SET saldo = saldo + NEW.importe WHERE cuit_cuil = NEW.cuit_cuil;
 	END IF;
 	IF (TG_OP='DELETE') THEN
-		UPDATE g06_cliente SET saldo=saldo-OLD.importe WHERE cuit_cuil=OLD.cuit_cuil;
+		UPDATE g06_cliente SET saldo = saldo - OLD.importe WHERE cuit_cuil = OLD.cuit_cuil;
 	END IF;
 	RETURN NEW;
 END
 $BODY$
+LANGUAGE 'plpgsql'
 
 CREATE TRIGGER TR_G06_ACTUALIZAR_SALDO
-AFTER INSERT OR DELETE OR UPDATE OF cuit_cuil,importe ON g06_movimiento_cc
+AFTER INSERT OR DELETE OR UPDATE OF cuit_cuil, importe ON g06_movimiento_cc
 FOR EACH ROW 
 EXECUTE PROCEDURE TRFN_G06_ACTUALIZAR_SALDO();
 
----Operacion que dispara el trigger 
+--Operacion que dispara el trigger
 
-DELETE FROM g06_linea_alquiler WHERE id_liquidacion=14;
+--Vamos a comprobar que el saldo de un cliente esta siendo actualizado con una 
+--insercion de un movimiento_cc correspondiente a un credito. Para ello consideremos un nuevo cliente
+--con cuit_cuil=666-66-0000 y saldo 6666666, y otro cliente con cuit_cuil=666-66-0001 y saldo 6666666
 
-UPDATE 
+/*
+INSERT INTO g06_cliente (cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq)
+VALUES ('666-66-0000','Apellido De Prueba 000','Nombre De Prueba 000',current_date,6666666,0),
+('666-66-0001','Apellido De Prueba 001','Nombre De Prueba 001',current_date,6666666,0);
 
-SELECT * FROM g06_movimiento_cc;
+--Consideremos un nuevo empleado perteneciente al tipo ADMINISTRACION
 
-SELECT * FROM g06_empleado;
+INSERT INTO g06_empleado (tipo_doc,nro_doc,apellido,nombre,tel_contacto,fecha_alta,fecha_baja,tipo)
+VALUES ('DNI','99999999','Apellido De Prueba 000','Nombre De Prueba 000','999-99-9999',current_date,NULL,'ADMINISTRACION');
 
-INSERT INTO g06_movimiento_cc (id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc) VALUES () 
+--El cliente 0000 realiza un credito de 100$ atendido por el empleado anterior.
 
+INSERT INTO g06_movimiento_cc (id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc) 
+VALUES ((select nextval('SQ_G06_MOVIMIENTO_CC_ID_MOVIMIENTO')),current_date,'666-66-0000',100,'DNI',99999999); 
+
+--Por lo tanto en la cuenta del cliente su saldo debe modificarse a 6666666+100=6666766, y si realizamos la siguiente consulta:
+
+SELECT * FROM G06_CLIENTE WHERE cuit_cuil='666-66-0000';
+
+--El resultado es la tupla 
+
+--cuit_cuil  |apellido              |nombre              |fecha_alta    |saldo     |cant_pos_alq|
+-------------|----------------------|--------------------|--------------|----------|------------|
+--666-66-0000|Apellido De Prueba 000|Nombre De Prueba 000|(fecha de hoy)|6666766.00|           0|
+
+--que es lo que esperabamos.
+--Si modificamos el valor del credito a 150 y el cuit_cuil asociado a 666-66-0001, este ultimo cliente debera tener
+--saldo de 6666666+150=6666816, y el cliente 666-66-0000 debera tener saldo 6666766-100=6666666.
+
+UPDATE G06_MOVIMIENTO_CC SET cuit_cuil='666-66-0001',importe=150 WHERE cuit_cuil='666-66-0000';
+
+--Con la consulta:
+
+SELECT * FROM G06_CLIENTE WHERE cuit_cuil IN ('666-66-0000','666-66-0001')
+
+--cuit_cuil  |apellido              |nombre              |fecha_alta|saldo     |cant_pos_alq|
+-------------|----------------------|--------------------|----------|----------|------------|
+--666-66-0000|Apellido De Prueba 000|Nombre De Prueba 000|2019-11-11|6666666.00|           0|
+--666-66-0001|Apellido De Prueba 001|Nombre De Prueba 001|2019-11-11|6666816.00|           0|
+
+--Vemos que el resultado es correcto.
+--Para deshacer los cambios en la base: 
+
+DELETE FROM g06_movimiento_cc WHERE nro_doc='99999999';
+
+DELETE FROM g06_cliente WHERE cuit_cuil IN ('666-66-0000','666-66-0001');
+
+DELETE FROM g06_empleado WHERE tipo_doc='DNI' AND nro_doc='99999999';
+*/
 
 --SERVICIO C1.1
 --########################################################################
-
 
 --Generar una lista de las estanterias que en este momento tienen mas de cierto
 --procentaje (configurable) de las posiciones ocupadas
@@ -246,7 +289,8 @@ LANGUAGE 'plpgsql';
 --(23    ,3      ,27            ,2       ,'LIBRE', 96)
 --(684   ,7      ,27            ,2       ,'LIBRE', 109)
 
-UPDATE g06_posicion SET estado='OCUPADO' WHERE id_pos=23;
+/*
+UPDATE g06_posicion SET estado = 'OCUPADO' WHERE id_pos = 23;
 
 --Utilizamos el servicio con 0.3, deberia devolver la estanteria 27
 SELECT	*
@@ -257,19 +301,19 @@ SELECT	*
 FROM FN_G06_ESTANTERIAS_OCUPADAS_MAS_DE(0.4);
 
 --Ocupamos otra posicion de la estateria ahora la 27 esta 2/3 ocupada
-UPDATE g06_posicion SET estado='OCUPADO' WHERE id_pos=283;
+UPDATE g06_posicion SET estado='OCUPADO' WHERE id_pos = 283;
 
 --Utilizamos el servicio con 0.4, no deberia devolver nada
 SELECT	*
 FROM FN_G06_ESTANTERIAS_OCUPADAS_MAS_DE(0.6);
 
 --Revertimos los datos a los originles
-UPDATE g06_posicion SET estado='LIBRE' WHERE id_pos=23;
-UPDATE g06_posicion SET estado='LIBRE' WHERE id_pos=283;
+UPDATE g06_posicion SET estado = 'LIBRE' WHERE id_pos = 23;
+UPDATE g06_posicion SET estado = 'LIBRE' WHERE id_pos = 283;
+*/
 
 --SERVICIO C2.2
 --########################################################################
-
 
 --Devolver todos los datos de las posiciones (estanteria, fila y nro de posicion) 
 --que cambiaron de zona al reconfigurar el deposito, indicando si estan ocupadas 
@@ -291,6 +335,7 @@ CREATE VIEW G06_ULTIMOS_CAMBIOS_DE_ZONA AS
 
 --La posicion 250 no tiene una zona asignada por eso le asignamos una primera zona
 --en la misma fecha que fueron asignadas el resto de posiciones en el esquema
+/*
 INSERT INTO g06_zona_posicion(id_pos,fecha,id_zona) VALUES (250,to_date('01/01/2018','DD/MM/YYYY'),26)
 
 SELECT *
@@ -314,129 +359,88 @@ DELETE FROM g06_zona_posicion WHERE id_pos=732 AND fecha=to_date('7/11/2019','DD
 
 SELECT *
 FROM G06_ULTIMOS_CAMBIOS_DE_ZONA;
-
+*/
 
 --SERVICIO C3
 --########################################################################
 
-
 --Diariamente se debe actualizar la cuenta corriente de cada cliente con los alquileres
---que tienen activos, agregando un movimiento de debito (importe negativo en la cueta
---corriente del mismo
+--que tienen activos, agregando un movimiento de debito (importe negativo en la cuenta
+--corriente del mismo)
 
-CREATE OR REPLACE PROCEDURE  PR_G06_GENERAR_FACTURAS AS ---Suponiendo que se ejecutaria diariamente
+CREATE OR REPLACE PROCEDURE  PR_G06_GENERAR_FACTURAS() AS --Suponiendo que se ejecutaria diariamente
 $body$
-DECLARE 
-	_fecha_de_hoy date;
-	_movimientos_cc_agregar int;
-	_aux int;
-	_current_client_id char(11);
-	_maximum_id_from_mov_cc int;
-    _new_id_for_mov_cc int;
-   	_cursor_for_join record;
-    _maximum_id_from_linea_alq int;
-  	_new_id_for_linea_alq int;
-  	_current_id_mov_cc int;  	
+DECLARE
+	_current_client g06_cliente.cuit_cuil%TYPE;
+	_current_alq record;
+	_current_alq_pos g06_alquiler_posicion%rowtype;
+	_current_id_mov_cc g06_movimiento_cc.id_mov_cc%TYPE;
+	_current_id_liq g06_linea_alquiler.id_liquidacion%TYPE;
+	_current_date date;
+	_amount_sum g06_movimiento_cc.importe%TYPE;
 BEGIN
-	_fecha_de_hoy=current_date;
-
-	---Se crea tabla auxiliar para guardar las tuplas alquiler-posicion
-	
-	CREATE TEMP TABLE tabla_join ( 
-		id_alquiler int,
-		id_cliente char(11),
-		importe_dia decimal(10,2),
-		id_pos int,
-		nuevo_liq_linea int
-	) ON COMMIT DROP;
-	
-	---Se crea tabla auxiliar para almacenar el mov_cc de cada cliente
-	
-	CREATE TEMP TABLE tabla_id_mov_de_clientes ( 
-		id_mov_cc int,
-		id_cliente char(11)
-	) ON COMMIT DROP;
-	
-	---Se inserta en la tabla auxiliar de alquiler-posicion las tuplas correspondientes a alquileres cuya
-	---fecha de finalizacion esta indefinida
-	
-	INSERT INTO tabla_join (id_alquiler,id_cliente,importe_dia,id_pos,nuevo_liq_linea)
+	_current_date=current_date;
+	FOR _current_client IN
 	(
-	SELECT alq.id_alquiler,alq.id_cliente,alq.importe_dia,alp.id_pos,(SELECT COALESCE(max(id_liquidacion),-1)+1
-																	  FROM g06_linea_alquiler
-																	  WHERE id_alquiler=alp.id_alquiler AND id_pos=alp.id_pos)
-	FROM g06_alquiler alq JOIN g06_alquiler_posicion alp ON (alq.id_alquiler=alp.id_alquiler)
-	WHERE fecha_hasta IS NULL
-	);
-	
-	---por cada uno de los distintos clientes con alquileres indefinidos, se genera una tupla de movimiento_cc.
-	
-	FOR _current_client_id IN (SELECT DISTINCT id_cliente FROM tabla_join) 
-    LOOP
-    	_maximum_id_from_mov_cc = (SELECT max(id_mov_cc) FROM g06_movimiento_cc); --sujeto a cambios
-    	_new_id_for_mov_cc= _maximum_id_from_mov_cc+1;
-    	INSERT INTO g06_movimiento_cc VALUES (_new_id_for_mov_cc,current_date,_current_client_id,0,null,null);
-		INSERT INTO tabla_id_mov_de_clientes VALUES (_new_id_for_mov_cc,_current_client_id);
-	END LOOP;
-    
-	---por cada uno de los distintos alquileres en las posiciones, generar una tupla en alquiler_posicion cuya 
-    ---clave extrangera id_mov_cc sea la correspondiente al movimiento_cc generado para el cliente.
-    
-	FOR _cursor_for_join IN (SELECT * FROM tabla_join)
-    LOOP
-    	_current_id_mov_cc=(SELECT id_mov_cc FROM tabla_id_mov_de_clientes WHERE id_cliente=_cursor_for_join.id_cliente);
-    	INSERT INTO g06_linea_alquiler (id_liquidacion,id_alquiler,id_pos,importe,id_mov_cc) VALUES 
-    	(_cursor_for_join.nuevo_liq_linea,_cursor_for_join.id_alquiler,_cursor_for_join.id_pos,_cursor_for_join.importe_dia,_current_id_mov_cc);
-	
-    	---actualizar el importe del movimiento_cc asociado a la linea_alquiler
-		
-    	UPDATE g06_movimiento_cc SET importe=importe-(_cursor_for_join.importe_dia) WHERE id_mov_cc=(_current_id_mov_cc);
+		SELECT DISTINCT alquiler.id_cliente FROM G06_ALQUILER alquiler 
+		WHERE alquiler.fecha_hasta IS NULL AND alquiler.fecha_desde<=_current_date
+	)
+	LOOP
+		_amount_sum=0;
+		_current_id_liq=(SELECT nextval ('SQ_G06_LINEA_ALQUILER_ID_LIQUIDACION'));
+		_current_id_mov_cc=(SELECT nextval('SQ_G06_MOVIMIENTO_CC_ID_MOVIMIENTO'));
+		INSERT INTO G06_MOVIMIENTO_CC (id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc)
+		VALUES (_current_id_mov_cc,_current_date,_current_client,0,NULL,NULL);
+		FOR _current_alq IN 
+		(
+			SELECT alquiler.id_alquiler,alquiler.importe_dia
+			FROM G06_ALQUILER alquiler 
+			WHERE id_cliente=_current_client
+			AND fecha_desde<=_current_date AND fecha_hasta IS NULL
+		)
+		LOOP
+			FOR _current_alq_pos IN 
+			(
+				SELECT alqpos.id_alquiler,alqpos.id_pos
+				FROM G06_ALQUILER_POSICION alqpos
+				WHERE alqpos.id_alquiler=_current_alq.id_alquiler
+			)
+			LOOP 
+				INSERT INTO G06_LINEA_ALQUILER (id_liquidacion,id_alquiler,id_pos,importe,id_mov_cc)
+				VALUES (_current_id_liq,_current_alq.id_alquiler,_current_alq_pos.id_pos,_current_alq.importe_dia,_current_id_mov_cc);
+				_amount_sum=_amount_sum-_current_alq.importe_dia;
+			END LOOP;
+		END LOOP;
+		UPDATE G06_MOVIMIENTO_CC SET importe=importe+_amount_sum WHERE id_mov_cc=_current_id_mov_cc;
 	END LOOP;
 END;
 $body$
 LANGUAGE plpgsql;
 
-CREATE SEQUENCE movimiento_cc_id_sequence INCREMENT BY -1
-MINVALUE (SELECT max(id_mov_cc) FROM g06_movimiento_cc) 
-START (SELECT max(id_mov_cc) FROM g06_movimiento_cc) NO CYCLE;
 
---ANTES DE EJECUTAR: ASEGURARSE DE QUE LOS VALORES QUE SE SUPONE QUE INTRODUZCA
---NO ESTEN YA INTRODUCIDOS!!!
+/*
+--Para testear de manera clara, asegurarse de que los valores que la funcion introduce
+--no se encuentren introducidos ya en la base eliminandolos con las sentencias especificadas al final.
 
-CALL PR_G06_GENERAR_FACTURAS; 
-
---A continuacion instrucciones para testear:
-
-SELECT * FROM g06_alquiler_posicion;
-
-SELECT * FROM g06_alquiler;
-
-SELECT * FROM g06_cliente;
-
-SELECT * FROM g06_posicion ORDER BY id_pos;
-
-SELECT * FROM g06_movimiento_cc ;
-
-DELETE FROM g06_linea_alquiler WHERE id_alquiler=6664;
-
-SELECT * FROM unc_248557.g06_linea_alquiler WHERE id_alquiler=6661;
-
-SELECT * FROM unc_248557.g06_linea_alquiler;
+--Supongamos que existen clientes con cuit_cuil 666-66-0000 y 666-66-0001 en la base:
 
 INSERT INTO g06_cliente (cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq) 
 VALUES 
 ('666-66-0000','Apellido De Prueba 000','Nombre De Prueba 000',current_date,6666666,0),
-('666-66-0001','Apellido De Prueba 001','Nombre De Prueba 001',current_date,6666666,0),
-('666-66-0002','Apellido De Prueba 002','Nombre De Prueba 002',current_date,6666666,0),
-('666-66-0003','Apellido De Prueba 003','Nombre De Prueba 003',current_date,6666666,0),
-('666-66-0004','Apellido De Prueba 004','Nombre De Prueba 004',current_date,6666666,0),
-('666-66-0005','Apellido De Prueba 005','Nombre De Prueba 005',current_date,6666666,0);
+('666-66-0001','Apellido De Prueba 001','Nombre De Prueba 001',current_date,6666666,0);
+
+--El cliente 666-66-0000 tiene 2 alquileres no definidos y el cliente
+-- 666-66-0001 tiene 1 alquiler no definido (no existen en la base otros alquileres no definidos). 
+--Todos los alquileres cuestan 60$ por dia:
 
 INSERT INTO g06_alquiler (id_alquiler,id_cliente,tipo_alquiler,fecha_desde,fecha_hasta,importe_dia) 
 VALUES 
 (6661,'666-66-0000','indefinido','2000-01-01',NULL,60),
 (6662,'666-66-0000','indefinido','2000-01-01',NULL,60),
 (6664,'666-66-0001','indefinido','2000-01-01',NULL,60);
+
+--El cliente 666-66-0000 tiene en su alquiler 6661 las posiciones 3,6 y 8. En su alquiler 6662 tiene la posicion 23.
+--El cliente 666-66-0001 tiene en su alquiler 6664 la posicion 35.
 
 INSERT INTO g06_alquiler_posicion (id_alquiler,id_pos)
 VALUES 
@@ -445,30 +449,59 @@ VALUES
 (6661,8),
 (6662,23),
 (6664,35); 
---se mantienen en la base
---para testear funcionamiento rapido
 
-INSERT INTO g06_alquiler_posicion (id_alquiler,id_pos) VALUES (6661,8);
+--Llamamos al stored procedure para generar las facturas.
 
-SELECT * FROM g06_movimiento_cc;
+CALL PR_G06_GENERAR_FACTURAS(); ---SE DEBE LLAMAR A ESTA FUNCION DIARIAMENTE
 
-INSERT INTO g06_alquiler_posicion VALUES ()
+--Esta actualizacion deberia dar como resultado 5 nuevas entradas en la tabla linea_alquiler, uno por cada
+--alquiler en cada posicion. 4 de ellos deberian estar asociados a un nuevo movimiento_cc cuyo cuit_cuil debiera
+--ser 666-66-0000. 1 de ellos deberia estar asociado a un nuevo movimiento_cc cuyo cuit_cuil tiene que ser 666-66-0001.
+--Podemos comprobarlo de la siguiente manera: Nos fijamos los nuevos datos ingresados en g06_linea_alquiler:
 
-DELETE FROM g06_movimiento_cc WHERE id_mov_cc=232;
+SELECT * FROM g06_linea_alquiler WHERE id_alquiler IN (6661,6662,6664);
 
-DELETE FROM g06_linea_alquiler WHERE id_liquidacion=14;
+--Esta consulta da como resultado las siguientes tuplas:
 
-DELETE FROM g06_alquiler WHERE tipo_alquiler='indefinido';
+--id_liquidacion|id_alquiler|id_pos|importe|id_mov_cc|
+----------------|-----------|------|-------|---------|
+--        100000|       6661|     3|     60|    80012|
+--        100000|       6661|     6|     60|    80012|
+--        100000|       6661|     8|     60|    80012|
+--        100000|       6662|    23|     60|    80012|
+--        100001|       6664|    35|     60|    80013|
 
-DELETE FROM g06_cliente WHERE saldo=6666666;
+--Ahora en la tabla g06_movimiento_cc comprobamos que el id_mov_cc=80012 se corresponde con el cuit_cuil=666-66-0000
+--y que el id_mov_cc=80013 se corresponde con el cuit_cuil=666-66-0001 (Tener en cuenta que en diferentes ejecuciones
+--los identificadores variarán, sin embargo el ejemplo es analogo).
 
-SELECT * FROM g06_linea_alquiler;
+SELECT * FROM g06_movimiento_cc WHERE id_mov_cc>=80000;
 
+--id_mov_cc|fecha     |cuit_cuil  |importe|tipo_doc|nro_doc|
+-----------|----------|-----------|-------|--------|-------|
+--    80012|2019-11-11|666-66-0000|-240.00|        |       |
+--    80013|2019-11-11|666-66-0001| -60.00|        |       |
 
+--Por lo tanto se generaron de manera correcta las nuevas tuplas. No solo eso, sino que los importes correspondientes
+--a los movimientos se sumaron de manera correcta (recordemos que 666-66-0000 tenia 4 alquileres de 60$ diarios lo que implica un
+--importe de 240$ en la factura. Mientras que 666-66-0001 tenia un solo alquiler del mismo costo diario)
+
+--Para deshacer los cambios introducidos a la base:
+DELETE FROM g06_linea_alquiler WHERE id_alquiler IN (6661,6662,6664);
+
+DELETE FROM g06_movimiento_cc WHERE id_mov_cc>=80000;
+
+DELETE FROM g06_alquiler_posicion WHERE id_alquiler IN (6661,6662,6664);
+
+DELETE FROM g06_alquiler WHERE id_alquiler IN (6661,6662,6664);
+
+DELETE FROM g06_cliente WHERE cuit_cuil IN ('666-66-0000','666-66-0001');
+*/
 
 --VISTA D1.1
 --########################################################################
-
+SELECT *
+FROM g06_movimiento gm
 
 --Listar los datos de todos los clientes junto con el ultimo movimiento de pago de mayor
 --importe que cada uno de estos realizo en los ultimos 12 meses, en el caso que corresponda
@@ -477,29 +510,111 @@ SELECT * FROM g06_linea_alquiler;
 CREATE VIEW G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES AS
 	SELECT c.*,mcc.id_mov_cc,mcc.fecha,mcc.importe,mcc.tipo_doc,mcc.nro_doc
 	FROM g06_movimiento_cc mcc
-	RIGHT JOIN g06_cliente c ON (mcc.cuit_cuil=c.cuit_cuil)
-	WHERE mcc.fecha>=current_date-INTERVAL '1 year'
-	
-	GROUP BY c.cuit_cuil,c.apellido,c.nombre,c.fecha_alta,c.saldo,c.cant_pos_alq,
-			 mcc.id_mov_cc,mcc.fecha,mcc.cuit_cuil,mcc.importe,mcc.tipo_doc,mcc.nro_doc
- 	--lo de abajo seria lo mismo que lo de arriba debido a las dependencias funcionales de 
- 	--las primary key
-	--GROUP BY c.cuit_cuil,mcc.id_mov_cc
-	HAVING mcc.importe=max(importe)
+	RIGHT JOIN g06_cliente c ON (mcc.cuit_cuil = c.cuit_cuil)
+	WHERE mcc.fecha>=current_date-INTERVAL '1 year' AND mcc.nro_doc IS NOT NULL AND mcc.tipo_doc IS NOT NULL
+			AND mcc.id_mov_cc = (	SELECT id_mov_cc
+									FROM g06_movimiento_cc
+									WHERE cuit_cuil=c.cuit_cuil
+									ORDER BY importe DESC,fecha DESC
+									LIMIT 1)
 ;
 
-SELECT * FROM G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES;
-
-CREATE OR REPLACE FUNCTION TRFN_G06_INSERT_CLIENTES_ULTIMOS_PAGOS_RELEVANTES()
+CREATE OR REPLACE FUNCTION TRFN_G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES_INSERT()
 RETURNS TRIGGER AS
 $BODY$
-BEGIN
+DECLARE 
+	_cliente record;
+	_mayor_pago record;
+BEGIN	
+
+	--Se verifica que el movimiento sea realizado dentro del ultimo a�o para simular un check option
+	IF (NEW.fecha<current_date-INTERVAL '1 year') THEN
+		RAISE EXCEPTION 'La fecha del movimiento tiene que ser dentro del ultimo a�o';
+	END IF;
+
+	--Se comprueba que sea efectivamente un pago, para esto se verifica que el saldo sea mayor que 0
+	IF (NEW.importe<=0) THEN
+		RAISE EXCEPTION 'El importe tiene que ser mayor a 0';
+	END IF;
 	
-	RETURN new;
+	--Se comprueba que el pago tenga asociado un empleado, en caso de no existir, va a fallar por las rirs
+	IF (NEW.tipo_doc IS NULL OR NEW.nro_doc IS NULL) THEN
+		RAISE EXCEPTION 'Tiene que referenciar a algun empleado';
+	END IF;
+
+	SELECT * INTO _cliente
+	FROM g06_cliente
+	WHERE cuit_cuil=NEW.cuit_cuil;
+
+	IF (_cliente IS NULL) THEN
+		
+		--Se inserta tanto el cliente como el nuevo movimiento
+		INSERT INTO g06_cliente (cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq)
+		VALUES (NEW.cuit_cuil,NEW.apellido,NEW.nombre,NEW.fecha_alta,0,0);
+		INSERT INTO g06_movimiento_cc (id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc)
+		VALUES (NEW.id_mov_cc,NEW.fecha,NEW.cuit_cuil,NEW.importe,NEW.tipo_doc,NEW.nro_doc);
+	ELSE
+		
+		--Se selecciona el maximo importe que tenia el cliente al cual se le esta agregando la factura
+		SELECT mcc.* INTO _mayor_pago
+		FROM g06_movimiento_cc mcc
+		WHERE mcc.cuit_cuil=NEW.cuit_cuil AND mcc.nro_doc IS NOT NULL AND mcc.tipo_doc IS NOT NULL
+		ORDER BY mcc.importe DESC, mcc.fecha DESC
+		LIMIT 1;
+	
+		--Se simula el check option
+		IF (NEW.importe<_mayor_pago.importe) THEN
+			RAISE EXCEPTION 'El importe ingresado debe ser mayor o igual al maximo existente';
+		END IF;
+		IF (NEW.importe=_mayor_pago.importe AND NEW.fecha<=_mayor_pago.fecha) THEN
+			RAISE EXCEPTION 'En caso de ser el mismo importe debe ser de una fecha mayor que la del pago existente';
+		END IF;
+		
+		--Se inserta unicamente el movimiento cc ignorando si hubo o no cambios en el cliente
+		INSERT INTO g06_movimiento_cc (id_mov_cc,fecha,cuit_cuil,importe,tipo_doc,nro_doc)
+		VALUES (NEW.id_mov_cc,NEW.fecha,NEW.cuit_cuil,NEW.importe,NEW.tipo_doc,NEW.nro_doc);
+	END IF;
+	RETURN NEW;
 END;
 $BODY$
 LANGUAGE 'plpgsql';
 
+
+CREATE TRIGGER TR_G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES_INSERT
+INSTEAD OF INSERT ON G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES
+FOR EACH ROW
+EXECUTE PROCEDURE TRFN_G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES_INSERT();
+
+/*
+INSERT INTO G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES(cuit_cuil,apellido,nombre,fecha_alta,saldo,cant_pos_alq,id_mov_cc,fecha,importe,tipo_doc,nro_doc)
+VALUES ('440-92-1464','Seymark','Abdul',to_date('2009-02-21','YYYY-MM-DD'),-723488.00,0,-1,to_date('2019-08-11','YYYY-MM-DD'),180900,'PAS',13170891)
+
+
+--440-92-1464	Seymark	Abdul	2009-02-21	-723488.00	0	21	2019-08-11	180900.00	PAS       	13170891
+
+
+SELECT * FROM G06_CLIENTES_ULTIMOS_PAGOS_RELEVANTES ORDER BY importe desc;
+
+INSERT INTO g06_movimiento_cc (id_mov_cc,fecha,importe,tipo_doc,nro_doc,cuit_cuil)
+VALUES (-1,current_date,156640.00,'PAS',32930773,'892-82-0758');
+
+DELETE FROM g06_movimiento_cc WHERE id_mov_cc=-1;
+
+SELECT * FROM g06_movimiento_cc WHERE cuit_cuil='892-82-0758';
+
+
+
+SELECT *
+FROM g06_cliente c 
+WHERE EXISTS (	SELECT 1
+				FROM g06_movimiento_cc mcc
+				WHERE mcc.fecha<c.fecha_alta AND c.cuit_cuil=mcc.cuit_cuil)
+;
+
+SELECT * FROM g06_cliente WHERE cuit_cuil = '892-82-0758';
+
+SELECT * FROM g06_movimiento_cc WHERE cuit_cuil = '892-82-0758';
+*/
 
 --VISTA D2.1
 --########################################################################
@@ -507,15 +622,17 @@ LANGUAGE 'plpgsql';
 
 --Listar todos los datos de las posiciones de la fila numero 5 en adelante que
 --nunca han sido alquiladas
+
 CREATE VIEW G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE AS
 	SELECT p.*
 	FROM g06_posicion p
-	WHERE p.nro_fila >=5 AND NOT EXISTS (	SELECT 1
+	WHERE p.nro_fila >= 5 AND NOT EXISTS (	SELECT 1
 											FROM g06_alquiler_posicion ap
 											WHERE ap.id_pos=p.id_pos)
 	--WITH CHECK OPTION
 ;
 
+/*
 DROP VIEW G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE;
 
 SELECT * FROM G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE;
@@ -527,17 +644,16 @@ VALUES (-1,1,142,9,-1,'LIBRE');
 --INSERT INTO G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE(id_pos,nro_posicion,nro_estanteria,nro_fila,pos_global,estado)
 --VALUES (-1,1,142,4,-1,'LIBRE');
 
-UPDATE G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE SET estado='OCUPADO' WHERE id_pos=-1;
+UPDATE G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE SET estado = 'OCUPADO' WHERE id_pos = -1;
 
 SELECT * FROM G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE;
 
-UPDATE G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE SET nro_fila=4 WHERE id_pos=-1;
+UPDATE G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE SET nro_fila =4  WHERE id_pos =- 1;
 
 SELECT * FROM G06_POSICIONES_NUNCA_ALQUILADAS_FILA_5_EN_ADELANTE;
 
-DELETE FROM g06_posicion WHERE id_pos=-1;
-
-
+DELETE FROM g06_posicion WHERE id_pos = -1;
+*/
 
 
 
@@ -569,8 +685,8 @@ GRANT ALL PRIVILEGES ON G06_ESTANTERIA TO unc_248570;
 GRANT ALL PRIVILEGES ON G06_ZONA_POSICION TO unc_248570;
 GRANT ALL PRIVILEGES ON G06_ZONA TO unc_248570;
 GRANT ALL PRIVILEGES ON G06_MOV_INTERNO TO unc_248570;
-
-
+GRANT ALL PRIVILEGES ON SQ_G06_MOVIMIENTO_CC_ID_MOVIMIENTO TO unc_248570;
+GRANT ALL PRIVILEGES ON SQ_G06_LINEA_ALQUILER_ID_LIQUIDACION TO unc_248570;
 
 
 GRANT ALL PRIVILEGES ON G06_CLIENTE TO unc_249039;
@@ -589,7 +705,8 @@ GRANT ALL PRIVILEGES ON G06_ESTANTERIA TO unc_249039;
 GRANT ALL PRIVILEGES ON G06_ZONA_POSICION TO unc_249039;
 GRANT ALL PRIVILEGES ON G06_ZONA TO unc_249039;
 GRANT ALL PRIVILEGES ON G06_MOV_INTERNO TO unc_249039;
-
+GRANT ALL PRIVILEGES ON SQ_G06_MOVIMIENTO_CC_ID_MOVIMIENTO TO unc_249039;
+GRANT ALL PRIVILEGES ON SQ_G06_LINEA_ALQUILER_ID_LIQUIDACION TO unc_249039;
 
 
 
